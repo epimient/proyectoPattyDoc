@@ -1,0 +1,42 @@
+from pydantic import BaseModel, Field
+
+
+class Plan(BaseModel):
+    calentamiento: str
+    entrenamiento: str
+    enfriamiento: str
+
+
+class SessionStartRequest(BaseModel):
+    plan: Plan
+
+
+class SessionStartResponse(BaseModel):
+    session_id: str
+    plan: Plan
+    status: str
+
+
+class SessionResponse(BaseModel):
+    session_id: str
+    status: str
+    plan: Plan
+    current_exercise: str | None = None
+    created_at: str | None = None
+    completed_at: str | None = None
+
+
+class ObservationRequest(BaseModel):
+    exercise: str
+    frame_ts: float = Field(default=0.0, ge=0)
+    fase: str = Field(default="")
+    desplazamiento_y: float = Field(default=0.0)
+    postura_correcta: bool = True
+    hombros_visibles: bool = False
+    repeticiones: int = Field(default=0, ge=0)
+
+
+class CorrectionResponse(BaseModel):
+    level: str
+    message_es: str
+    siguiente_paso: str

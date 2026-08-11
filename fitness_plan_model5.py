@@ -261,9 +261,9 @@ def collect_feedback(plan, feedback, df, model, feature_columns, target_columns,
 
 # Main execution
 if __name__ == "__main__":
-    MODEL_PATH = "modelo5.keras"
+    MODEL_PATH = "artifacts/modelo5.keras"
 
-    df = pd.read_excel("Datos generados con modelo.xlsx")
+    df = pd.read_excel("data/Datos generados con modelo.xlsx")
     df, feature_columns, target_columns, le_dict, target_encoders, scaler, num_classes = preprocess_data(df)
     
     diagnostico_excel(df, le_dict, target_columns, target_encoders)

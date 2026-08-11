@@ -48,3 +48,18 @@ htmlcov/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Backups generados al reentrenar artefactos
+artifacts/backups/
+
+# Base de datos de sesiones
+*.db
+*.db-wal
+*.db-shm
+
+# caché de voz sintetizada (gTTS/edge-tts)
+data/tts_cache/
+
+# frontend
+frontend/node_modules/
+frontend/dist/

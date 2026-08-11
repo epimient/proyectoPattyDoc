@@ -1,0 +1,17 @@
+{
+  "Sentadillas asistidas con silla/barra": {
+    "mecanica": "squat",
+    "profundidad_objetivo_m": 0.35,
+    "descenso_inicio_m": 0.1,
+    "subida_completa_m": 0.15,
+    "tolerancia_hombros_deg": 10,
+    "repeticiones_objetivo": 10,
+    "mensajes": {
+      "ok": "Excelente, repetición válida ({reps}/{objetivo})",
+      "postura": "Sube con la espalda recta, mantén los hombros nivelados",
+      "profundidad": "Baja un poco más para completar la sentadilla",
+      "hombros_no_visibles": "Colócate frente a la cámara para que pueda ver tus hombros",
+      "completado": "¡Sentadillas completadas! Meta: {objetivo} repeticiones"
+    }
+  }
+}
