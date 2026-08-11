@@ -102,6 +102,7 @@ proyectoPattyDoc/
 | [`docs/05-gemelo-digital.md`](docs/05-gemelo-digital.md) | Fase 2: detector de tags, sesiones, motor de corrección y uso CLI |
 | [`docs/06-guia-de-desarrollo.md`](docs/06-guia-de-desarrollo.md) | Instalación, ejecución, tests y scripts |
 | [`docs/07-frontend.md`](docs/07-frontend.md) | Frontend web: estructura, diseño y ejecución |
+| [`DESING.md`](DESING.md) | Sistema de diseño del frontend: principios, tokens, componentes, estados y accesibilidad |
 
 ---
 
