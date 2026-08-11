@@ -1,13 +1,13 @@
-# 📊 Dataset
+# Dataset
 
 ## 1. Generalidades
 
 - **Fuente:** `data/Datos generados con modelo.xlsx`
 - **Formato:** Excel (OpenPyXL / pandas `read_excel`)
-- **Registros:** 517 filas en `Hoja1` → **512 filas válidas** tras el preprocesamiento
+- **Registros:** 517 filas en `Hoja1` -> **512 filas válidas** tras el preprocesamiento
 - **Origen:** datos **sintéticos** generados con un modelo de datos (proyecto académico)
 
-> 📝 El Excel contiene varias hojas. El backend solo usa `Hoja1` (la hoja por defecto de `pd.read_excel`).
+> El Excel contiene varias hojas. El backend solo usa `Hoja1` (la hoja por defecto de `pd.read_excel`).
 
 ## 2. Variables
 

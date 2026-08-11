@@ -5,28 +5,28 @@ Medir la precision del modelo 5 al predecir ejercicios para cada fase (calentami
 
 ---
 
-## 🔍 Problemas identificados que afectan la precision
+## Problemas identificados que afectan la precision
 
-### P1 — Split con separador incorrecto (`:32`)
+### P1 - Split con separador incorrecto (`:32`)
 ```python
 df[col] = df[col].apply(lambda x: x.split(',')[0].strip() if isinstance(x, str) else x)
 ```
 Usa `','` pero los datos usan `'; '`. El label de entrenamiento termina siendo el string completo tipo `"Marcha en el lugar con cuerda guia; Elevacion de rodillas alternadas"`. Cada combinacion unica de 2 ejercicios se convierte en una clase distinta. El modelo memoriza pares en vez de aprender ejercicios individuales. La precision en test puede verse alta artificialmente porque solo hay que acertar el par exacto, pero el modelo no generaliza.
 
-### P2 — Sin `stratify` en `train_test_split` (`:269-271`)
+### P2 - Sin `stratify` en `train_test_split` (`:269-271`)
 Si una clase tiene pocas muestras, puede caer toda en train o toda en test. Si cae toda en test, el modelo nunca aprendio esa clase -> precision 0%. Si cae toda en train, la metrica de test no refleja que exista.
 
-### P3 — `collect_feedback` corrupto (`:220-255`)
+### P3 - `collect_feedback` corrupto (`:220-255`)
 Cuando se da feedback, el reentrenamiento corrompe el dataset completo. Las predicciones posteriores son esencialmente aleatorias. La precision post-feedback es impredecible y tipicamente mala.
 
-### P4 — Sin guardado de modelo
+### P4 - Sin guardado de modelo
 Cada ejecucion es desde cero. No hay forma de medir si el modelo mejora con el tiempo o con feedback.
 
 ---
 
-## 📋 Plan de pruebas
+## Plan de pruebas
 
-### Fase 1 — Pruebas de caja negra (estado actual)
+### Fase 1 - Pruebas de caja negra (estado actual)
 
 Ejecutar el modelo existente y extraer metricas reales sobre el test set:
 
@@ -55,7 +55,7 @@ for i, fase in enumerate(['Calentamiento', 'Entrenamiento', 'Enfriamiento']):
 - Matriz de confusion para detectar clases que nunca acierta
 - Conteo de muestras por clase (detectar desbalanceo)
 
-### Fase 2 — Distribucion de clases
+### Fase 2 - Distribucion de clases
 
 Antes del split, inspeccionar cuantas muestras tiene cada clase:
 
@@ -70,7 +70,7 @@ Esto revela:
 - Si el separador incorrecto genera clases artificiales
 - Nivel de desbalanceo del dataset
 
-### Fase 3 — Pruebas de coherencia logica
+### Fase 3 - Pruebas de coherencia logica
 
 Probar inputs especificos que deberian dar resultados predecibles:
 
@@ -82,7 +82,7 @@ Probar inputs especificos que deberian dar resultados predecibles:
 
 Si el modelo da resultados contradictorios (ej: ejercicio avanzado para alguien con condicion limitada), hay un problema de fondo en el aprendizaje.
 
-### Fase 4 — Prueba de feedback
+### Fase 4 - Prueba de feedback
 
 1. Ejecutar, obtener prediccion inicial sobre un registro
 2. Dar feedback incorrecto (cambiar ejercicios)
@@ -92,7 +92,7 @@ Si el modelo da resultados contradictorios (ej: ejercicio avanzado para alguien 
    - Que la precision en otros inputs no se degrade drasticamente
    - Que los encoders no se hayan corrompido (verificar clases disponibles antes y despues)
 
-### Fase 5 — Comparacion antes/despues de correcciones
+### Fase 5 - Comparacion antes/despues de correcciones
 
 1. Ejecutar Fase 1 con el codigo actual (bugs incluidos)
 2. Corregir bugs (separador, fillna, collect_feedback)
@@ -100,7 +100,7 @@ Si el modelo da resultados contradictorios (ej: ejercicio avanzado para alguien 
 
 ---
 
-## 📊 Interpretacion de resultados
+## Interpretacion de resultados
 
 | Escenario | Que esperar |
 |-----------|-------------|
@@ -111,7 +111,7 @@ Si el modelo da resultados contradictorios (ej: ejercicio avanzado para alguien 
 
 ---
 
-## 🛠️ Script de diagnostico rapido
+## Script de diagnostico rapido
 
 Agregar al final del `__main__` (antes del feedback hardcodeado):
 
@@ -140,11 +140,11 @@ for i, fase in enumerate(['Calentamiento', 'Entrenamiento', 'Enfriamiento']):
 
 ---
 
-## 📊 Clasificacion de errores por gravedad
+## Clasificacion de errores por gravedad
 
-### 🔴 Criticos — Impiden el funcionamiento correcto
+### Criticos - Impiden el funcionamiento correcto
 
-#### E1 — Separador incorrecto en split (`:32`)
+#### E1 - Separador incorrecto en split (`:32`)
 
 **Gravedad:** Critico
 
@@ -164,7 +164,7 @@ for i, fase in enumerate(['Calentamiento', 'Entrenamiento', 'Enfriamiento']):
 df[col] = df[col].apply(lambda x: x.split(';')[0].strip() if isinstance(x, str) else x)
 ```
 
-#### E2 — fillna masivo en todo el DataFrame (`:15`)
+#### E2 - fillna masivo en todo el DataFrame (`:15`)
 
 **Gravedad:** Critico
 
@@ -186,7 +186,7 @@ df[num_cols] = df[num_cols].fillna(df[num_cols].mean())
 df[cat_cols] = df[cat_cols].fillna('No aplica')
 ```
 
-#### E3 — collect_feedback corrupto (`:220-255`)
+#### E3 - collect_feedback corrupto (`:220-255`)
 
 **Gravedad:** Critico
 
@@ -233,9 +233,9 @@ df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
 
 ---
 
-### 🟡 Medios — Afectan calidad y consistencia
+### Medios - Afectan calidad y consistencia
 
-#### E4 — Sin stratify en train_test_split (`:269-271`)
+#### E4 - Sin stratify en train_test_split (`:269-271`)
 
 **Gravedad:** Medio
 
@@ -259,7 +259,7 @@ X_train, X_test, y1_train, y1_test, y2_train, y2_test, y3_train, y3_test = train
 )
 ```
 
-#### E5 — Nombres de fase en ingles (`:196-201`)
+#### E5 - Nombres de fase en ingles (`:196-201`)
 
 **Gravedad:** Medio
 
@@ -283,9 +283,9 @@ plan = {
 
 ---
 
-### 🟢 Bajos — Cosmetica y eficiencia
+### Bajos - Cosmetica y eficiencia
 
-#### E6 — `time.sleep(30)` al final (`:321`)
+#### E6 - `time.sleep(30)` al final (`:321`)
 
 **Gravedad:** Bajo
 
@@ -295,7 +295,7 @@ plan = {
 
 **Solucion:** Eliminar la linea.
 
-#### E7 — `time.sleep(5)` dentro del loop TTS (`:58`)
+#### E7 - `time.sleep(5)` dentro del loop TTS (`:58`)
 
 **Gravedad:** Bajo
 
@@ -305,7 +305,7 @@ plan = {
 
 **Solucion:** Mover `time.sleep(5)` despues de `engine.runAndWait()` o eliminar.
 
-#### E8 — Inverse transform repetido 3 veces (`:290-292`)
+#### E8 - Inverse transform repetido 3 veces (`:290-292`)
 
 **Gravedad:** Bajo
 
@@ -319,7 +319,7 @@ inversed = scaler.inverse_transform([[Edad, IMC, Tiempo]])[0]
 readable_input['Edad'], readable_input['IMC'], readable_input['Tiempo de Actividad Fisica'] = inversed
 ```
 
-#### E9 — print() vacio (`:207`) y punto y coma (`:6`)
+#### E9 - print() vacio (`:207`) y punto y coma (`:6`)
 
 **Gravedad:** Bajo
 
@@ -331,19 +331,19 @@ readable_input['Edad'], readable_input['IMC'], readable_input['Tiempo de Activid
 
 ---
 
-## 📈 Impacto acumulado en la precision
+## Impacto acumulado en la precision
 
 | Error | Impacto en precision | Prioridad de fix |
 |-------|---------------------|------------------|
-| E1 — Separador incorrecto | Alto. Distorsiona las clases totalmente. | 1 |
-| E2 — fillna masivo | Critico. Rompe el script si hay NaN. | 2 |
-| E3 — collect_feedback corrupto | Alto. Corrompe dataset post-feedback. | 3 |
-| E4 — Sin stratify | Medio. Clases minoritarias ignoradas. | 4 |
-| E5 — Nombres en ingles | Nulo en precision. | 5 |
-| E6-E9 — Bajos | Nulo. | 6-9 |
+| E1 - Separador incorrecto | Alto. Distorsiona las clases totalmente. | 1 |
+| E2 - fillna masivo | Critico. Rompe el script si hay NaN. | 2 |
+| E3 - collect_feedback corrupto | Alto. Corrompe dataset post-feedback. | 3 |
+| E4 - Sin stratify | Medio. Clases minoritarias ignoradas. | 4 |
+| E5 - Nombres en ingles | Nulo en precision. | 5 |
+| E6-E9 - Bajos | Nulo. | 6-9 |
 
 **Orden recomendado:** E1 -> E2 -> E3 -> E4 -> E5 -> E6-E9
 
 ---
 
-*Documento generado el 12/06/2026 — Actualizado con clasificacion de errores y soluciones*
+*Documento generado el 12/06/2026 - Actualizado con clasificacion de errores y soluciones*

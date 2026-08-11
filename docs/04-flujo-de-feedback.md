@@ -1,4 +1,4 @@
-# 🔁 Flujo de feedback y reentrenamiento
+# Flujo de feedback y reentrenamiento
 
 ## 1. Idea general
 
@@ -11,7 +11,7 @@ El endpoint `POST /api/feedback` recibe:
 ```json
 {
   "suitable": false,
-  "input_data": { "…perfil del usuario…" },
+  "input_data": { "...perfil del usuario..." },
   "corrected_exercises": {
     "Calentamiento": "Rotaciones articulares suaves",
     "Entrenamiento": "Caminata en el lugar",
@@ -20,38 +20,38 @@ El endpoint `POST /api/feedback` recibe:
 }
 ```
 
-- Si `suitable: true` → el plan es adecuado → **no se reentrena**. Respuesta inmediata:
+- Si `suitable: true` -> el plan es adecuado -> **no se reentrena**. Respuesta inmediata:
   ```json
   { "status": "ok", "retrained": false, "message": "Plan adecuado, no se requiere reentrenamiento" }
   ```
-- Si `suitable: false` → se **reentrena** con las correcciones.
+- Si `suitable: false` -> se **reentrena** con las correcciones.
 
 ## 3. Algoritmo de reentrenamiento (`PlanService.apply_feedback`)
 
-```
-1. Si suitable == true → devolver sin reentrenar (guard clause)
-2. new_row = input_data (perfil humano)
-3. Codificar categóricas:
-     para cada columna categórica:
-       si valor desconocido → expandir le_dict[col].classes_ y recodificar
-4. Escalar numéricas con el mismo StandardScaler
-5. Codificar targets (ejercicios corregidos):
-     para cada fase (Calentamiento/Entrenamiento/Enfriamiento):
-       si el ejercicio no existe en la fase → expandir target_encoder
-         y actualizar num_classes[fase] += 1
-6. df = concat(dataset_preprocesado, new_row)
-7. y1,y2,y3 = to_categorical(targets, num_classes)
-8. modelo = build_model(10, [9,9,7])   ← con num_classes actualizadas
-9. modelo.fit(X, [y1,y2,y3], epochs=10, batch_size=32)
-10. modelo.save(artifacts/modelo5.keras)
-11. guardar preprocessors.pkl actualizado (df, encoders, scaler, num_classes)
+```mermaid
+flowchart TD
+    A[Recibir feedback] --> B{suitable}
+    B -->|Sí| C[Responder sin reentrenar]
+    B -->|No| D[Construir fila con el perfil]
+    D --> E[Codificar categorías]
+    E --> F{Hay categoría nueva}
+    F -->|Sí| G[Expandir LabelEncoder]
+    F -->|No| H[Escalar variables numéricas]
+    G --> H
+    H --> I[Codificar ejercicios corregidos]
+    I --> J{Hay ejercicio nuevo}
+    J -->|Sí| K[Expandir encoder y num_classes]
+    J -->|No| L[Agregar fila al dataset]
+    K --> L
+    L --> M[Construir y entrenar modelo]
+    M --> N[Guardar modelo y preprocesadores]
 ```
 
 ## 4. Efectos visibles
 
 | Efecto | Detalle |
 |--------|---------|
-| **Expansión de clases** | Si el ejercicio corregido es nuevo, `num_classes` de esa fase crece (p. ej. Fase 2 de 9 → 10) |
+| **Expansión de clases** | Si el ejercicio corregido es nuevo, `num_classes` de esa fase crece (p. ej. Fase 2 de 9 -> 10) |
 | **Catálogo actualizado** | El ejercicio nuevo aparece en `GET /api/exercises` |
 | **Modelo persistido** | Se guarda `modelo5.keras` reentrenado |
 | **Preprocesadores persistidos** | Se guarda `preprocessors.pkl` con los encoders expandidos |

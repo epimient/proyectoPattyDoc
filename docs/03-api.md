@@ -1,4 +1,4 @@
-# 🌐 API — Referencia completa
+# API - Referencia completa
 
 ## 1. Información general
 
@@ -8,7 +8,7 @@
 | **Esquema** | HTTP/REST |
 | **Formato** | JSON (`application/json`) |
 | **Framework** | FastAPI |
-| **Documentación interactiva** | `GET /docs` (Swagger UI) · `GET /redoc` |
+| **Documentación interactiva** | `GET /docs` (Swagger UI); `GET /redoc` |
 | **Prefijo común** | `/api` |
 | **Autenticación** | No requerida (API interna del proyecto) |
 
@@ -47,7 +47,7 @@ Campos relevantes de cada elemento:
 
 | Campo | Descripción |
 |-------|-------------|
-| `type` | Tipo de error (`missing`, `int_type`, `float_type`, `greater_than_equal`, `less_than_equal`, …) |
+| `type` | Tipo de error (`missing`, `int_type`, `float_type`, `greater_than_equal`, `less_than_equal`, ...) |
 | `loc` | Ruta del campo fallido (`["body", "<campo>"]`) |
 | `msg` | Descripción legible |
 | `input` | Valor recibido que falló |
@@ -70,18 +70,18 @@ La API acepta **dos convenciones** para cada campo (aliases):
 
 | Campo (alias en español) | Atributo (snake_case) | Tipo | Validación |
 |--------------------------|------------------------|------|-----------|
-| `Edad` | `edad` | `int` | `10 ≤ x ≤ 120` |
-| `Género` | `genero` | `str` | — |
-| `IMC` | `imc` | `float` | `10 ≤ x ≤ 70` |
-| `Nivel de Visión` | `nivel_vision` | `str` | — |
-| `Condición Física` | `condicion_fisica` | `str` | — |
-| `Tiempo de Actividad Física` | `tiempo_actividad_fisica` | `float` | `0 ≤ x ≤ 500` |
-| `Condición Comórbida` | `condicion_comorbida` | `str` | — |
-| `Preferencia de Accesibilidad` | `preferencia_accesibilidad` | `str` | — |
-| `Entorno de Ejercicio` | `entorno_ejercicio` | `str` | — |
-| `Motivación` | `motivacion` | `str` | — |
+| `Edad` | `edad` | `int` | `10 <= x <= 120` |
+| `Género` | `genero` | `str` | - |
+| `IMC` | `imc` | `float` | `10 <= x <= 70` |
+| `Nivel de Visión` | `nivel_vision` | `str` | - |
+| `Condición Física` | `condicion_fisica` | `str` | - |
+| `Tiempo de Actividad Física` | `tiempo_actividad_fisica` | `float` | `0 <= x <= 500` |
+| `Condición Comórbida` | `condicion_comorbida` | `str` | - |
+| `Preferencia de Accesibilidad` | `preferencia_accesibilidad` | `str` | - |
+| `Entorno de Ejercicio` | `entorno_ejercicio` | `str` | - |
+| `Motivación` | `motivacion` | `str` | - |
 
-> ✅ **Importante:** los campos categóricos aceptan cualquier string. Los **desconocidos** se sustituyen por el valor más frecuente del dataset (ver [`01-modelo-de-ia.md`](01-modelo-de-ia.md#5-artefactos)).
+> **Importante:** los campos categóricos aceptan cualquier string. Los **desconocidos** se sustituyen por el valor más frecuente del dataset (ver [`01-modelo-de-ia.md`](01-modelo-de-ia.md#5-artefactos)).
 
 ### 3.2 Ejemplo (español)
 
@@ -121,7 +121,7 @@ La API acepta **dos convenciones** para cada campo (aliases):
 
 ## 4. Endpoints
 
-### 4.1 `GET /api/health` — Estado del servicio
+### 4.1 `GET /api/health` - Estado del servicio
 
 Verifica que el modelo y los preprocesadores están cargados.
 
@@ -151,7 +151,7 @@ Verifica que el modelo y los preprocesadores están cargados.
 
 ---
 
-### 4.2 `POST /api/plan` — Generar plan de ejercicio
+### 4.2 `POST /api/plan` - Generar plan de ejercicio
 
 Genera los 3 ejercicios personalizados a partir del perfil del usuario.
 
@@ -202,7 +202,7 @@ curl -X POST http://127.0.0.1:8000/api/plan \
 
 ---
 
-### 4.3 `GET /api/exercises` — Catálogo de ejercicios
+### 4.3 `GET /api/exercises` - Catálogo de ejercicios
 
 Devuelve todos los ejercicios disponibles, agrupados por fase. Es el catálogo que el frontend usa para el flujo "Comenzar".
 
@@ -250,13 +250,13 @@ Devuelve todos los ejercicios disponibles, agrupados por fase. Es el catálogo q
 | `Entrenamiento` | `string[]` | 9 ejercicios de fase 2 |
 | `Enfriamiento` | `string[]` | 7 ejercicios de fase 3 |
 
-> 💡 Las claves usan **mayúscula inicial** (`Calentamiento`), mientras que la respuesta de `/api/plan` usa **minúsculas** (`calentamiento`). Esto es intencional y debe respetarse al consumir la API.
+> **Nota:** Las claves usan **mayúscula inicial** (`Calentamiento`), mientras que la respuesta de `/api/plan` usa **minúsculas** (`calentamiento`). Esto es intencional y debe respetarse al consumir la API.
 
 **Errores:** `503` si el modelo no está cargado.
 
 ---
 
-### 4.4 `POST /api/feedback` — Enviar feedback y reentrenar
+### 4.4 `POST /api/feedback` - Enviar feedback y reentrenar
 
 Permite que el usuario corrija el plan. Si `suitable` es `false`, el sistema **reentrena el modelo** con la corrección y guarda los artefactos actualizados.
 
@@ -343,11 +343,11 @@ Permite que el usuario corrija el plan. Si `suitable` es `false`, el sistema **r
 
 ---
 
-## 5. Endpoints de sesión (Fase 2 — gemelo digital)
+## 5. Endpoints de sesión (Fase 2 - gemelo digital)
 
 Prefijo: `/api/session`. Permiten que el detector (o cualquier cliente) abra una sesión ligada a un plan, envíe observaciones de ejecución y reciba **correcciones** en español. Las sesiones se persisten en **SQLite** (`data/sessions.db`, se crea al arrancar).
 
-### 5.1 `POST /api/session/start` — Crear sesión
+### 5.1 `POST /api/session/start` - Crear sesión
 
 **Request body:**
 
@@ -377,7 +377,7 @@ Prefijo: `/api/session`. Permiten que el detector (o cualquier cliente) abra una
 | `plan` | `object` | El plan recibido |
 | `status` | `string` | `active` |
 
-### 5.2 `GET /api/session/{session_id}` — Consultar sesión
+### 5.2 `GET /api/session/{session_id}` - Consultar sesión
 
 **Respuesta `200 OK`:**
 
@@ -385,16 +385,16 @@ Prefijo: `/api/session`. Permiten que el detector (o cualquier cliente) abra una
 {
   "session_id": "43da54c2b4734d63b13f63ffc745e888",
   "status": "active",
-  "plan": { "…" },
+  "plan": { "..." },
   "current_exercise": "Sentadillas asistidas con silla/barra",
   "created_at": "2026-08-11T17:35:08.150700+00:00",
   "completed_at": null
 }
 ```
 
-**Error:** `404` → `{"detail": "Sesión no encontrada"}`
+**Error:** `404` -> `{"detail": "Sesión no encontrada"}`
 
-### 5.3 `POST /api/session/{session_id}/observation` — Enviar observación y recibir corrección
+### 5.3 `POST /api/session/{session_id}/observation` - Enviar observación y recibir corrección
 
 El endpoint central del gemelo digital: **el backend evalúa** la observación contra la plantilla del ejercicio (`data/exercise_templates.json`) y devuelve la corrección.
 
@@ -403,12 +403,12 @@ El endpoint central del gemelo digital: **el backend evalúa** la observación c
 | Campo | Tipo | Validación | Descripción |
 |-------|------|-----------|-------------|
 | `exercise` | `string` | requerido | Nombre del ejercicio (del plan) |
-| `frame_ts` | `float` | `≥ 0` | Marca de tiempo del frame |
-| `fase` | `string` | — | Fase de la máquina de estados (`DE_PIE`, `BAJANDO`, `SQUAT_PROFUNDO`, …) |
-| `desplazamiento_y` | `float` | — | Descenso del torso en metros |
-| `postura_correcta` | `boolean` | — | Hombros nivelados (dentro de tolerancia) |
-| `hombros_visibles` | `boolean` | — | Si los tags de los hombros están visibles |
-| `repeticiones` | `int` | `≥ 0` | Repeticiones válidas contadas |
+| `frame_ts` | `float` | `>= 0` | Marca de tiempo del frame |
+| `fase` | `string` | - | Fase de la máquina de estados (`DE_PIE`, `BAJANDO`, `SQUAT_PROFUNDO`, ...) |
+| `desplazamiento_y` | `float` | - | Descenso del torso en metros |
+| `postura_correcta` | `boolean` | - | Hombros nivelados (dentro de tolerancia) |
+| `hombros_visibles` | `boolean` | - | Si los tags de los hombros están visibles |
+| `repeticiones` | `int` | `>= 0` | Repeticiones válidas contadas |
 
 ```json
 {
@@ -426,9 +426,9 @@ El endpoint central del gemelo digital: **el backend evalúa** la observación c
 
 | Campo | Tipo | Valores |
 |-------|------|---------|
-| `level` | `string` | `ok` · `warning` · `error` |
+| `level` | `string` | `ok`; `warning`; `error` |
 | `message_es` | `string` | Corrección en español (para TTS) |
-| `siguiente_paso` | `string` | `CONTINUAR` · `REPETIR` · `AVANZAR` |
+| `siguiente_paso` | `string` | `CONTINUAR`; `REPETIR`; `AVANZAR` |
 
 Ejemplos:
 
@@ -444,15 +444,15 @@ Si el ejercicio **no tiene plantilla**: `{ "level": "ok", "message_es": "Ejercic
 
 Cada observación queda registrada en el historial y actualiza `current_exercise`.
 
-**Errores:** `404` sesión inexistente · `422` contrato inválido.
+**Errores:** `404` sesión inexistente; `422` contrato inválido.
 
-### 5.4 `GET /api/session/{session_id}/observations` — Historial
+### 5.4 `GET /api/session/{session_id}/observations` - Historial
 
 Devuelve todas las observaciones con su corrección (útil para el reporte de fin de sesión).
 
 **Respuesta `200 OK`:** array de registros con `id`, `exercise`, `fase`, `desplazamiento_y`, `postura_correcta`, `hombros_visibles`, `repeticiones`, `level`, `message_es`, `siguiente_paso`, `created_at`.
 
-### 5.5 `POST /api/session/{session_id}/complete` — Cerrar sesión
+### 5.5 `POST /api/session/{session_id}/complete` - Cerrar sesión
 
 Marca la sesión como `completed` (y rellena `completed_at`).
 
@@ -483,15 +483,15 @@ curl -s -X POST $BASE/api/session/$SID/complete
 El backend también ejecuta el **detector de tags en un hilo propio** y lo expone
 al frontend web. El navegador solo muestra el video (MJPEG) y envía comandos.
 
-### 6.1 `GET /api/camera/state` — Estado en tiempo real
+### 6.1 `GET /api/camera/state` - Estado en tiempo real
 
 Devuelve el estado del controlador de cámara (para polling cada ~200 ms):
 
 ```json
 {
   "status": "running",
-  "session_id": "…",
-  "plan": { "calentamiento": "…", "entrenamiento": "…", "enfriamiento": "…" },
+  "session_id": "...",
+  "plan": { "calentamiento": "...", "entrenamiento": "...", "enfriamiento": "..." },
   "phase": "entrenamiento",
   "exercise": "(Fuerza y Resistencia) Sentadillas asistidas con silla/barra",
   "fase": "SQUAT_PROFUNDO",
@@ -504,13 +504,13 @@ Devuelve el estado del controlador de cámara (para polling cada ~200 ms):
   "tracking_available": true,
   "calibration_requested": false,
   "detected_tags": [0, 1],
-  "correction": { "level": "warning", "message_es": "…", "siguiente_paso": "REPETIR" },
+  "correction": { "level": "warning", "message_es": "...", "siguiente_paso": "REPETIR" },
   "error": null,
   "completed_naturally": false
 }
 ```
 
-`status`: `idle` · `running` · `waiting_next` · `completed` · `stopped` · `error`.
+`status`: `idle`; `running`; `waiting_next`; `completed`; `stopped`; `error`.
 
 Campos de diagnóstico:
 
@@ -520,13 +520,13 @@ Campos de diagnóstico:
 - `hombros_visibles`: existen poses 3D válidas simultáneas para los IDs `0` y `1`.
 - `fase`: `MANUAL`, `ESPERANDO`, `DE_PIE`, `BAJANDO` o `SQUAT_PROFUNDO`.
 
-### 6.2 `GET /api/camera/stream` — Video MJPEG
+### 6.2 `GET /api/camera/stream` - Video MJPEG
 
 Streaming `multipart/x-mixed-replace` con el frame anotado (tags dibujados,
 fase y repeticiones). Se consume con un `<img src="/api/camera/stream">`.
 Mientras no hay sesión muestra un placeholder ("Cámara apagada").
 
-### 6.3 `POST /api/camera/start` — Iniciar sesión con cámara
+### 6.3 `POST /api/camera/start` - Iniciar sesión con cámara
 
 Crea la sesión (`POST /api/session/start`) y arranca el loop de detección.
 
@@ -535,17 +535,17 @@ Crea la sesión (`POST /api/session/start`) y arranca el loop de detección.
 
 **Respuesta `200 OK`:** estado inicial del `CameraController`, con `status=running`, `session_id`, plan y campos de diagnóstico. La cámara ya está abierta cuando responde. **Errores:** `503` si la fuente de video no está disponible o si ya existe una sesión activa.
 
-### 6.4 `POST /api/camera/calibrate` — Calibrar postura inicial
+### 6.4 `POST /api/camera/calibrate` - Calibrar postura inicial
 
 Requiere `status=running`, `tracking_available=true` y una calibración aún pendiente. Marca `calibration_requested=true` y busca las AprilTag `tag36h11` ID `0` y `1`. Cuando ambas tienen pose 3D, guarda la altura inicial, cambia a `calibrado=true` y entra en `DE_PIE`. **Errores `409`:** ejercicio manual, sesión inactiva o postura ya calibrada.
 
-### 6.5 `POST /api/camera/next` — Pasar al siguiente ejercicio
+### 6.5 `POST /api/camera/next` - Pasar al siguiente ejercicio
 
 Requiere `status=waiting_next`, tanto para una meta automática cumplida como para confirmar el final de un ejercicio manual. El estado cambia inmediatamente a `running` para impedir que un doble clic adelante dos fases. **Errores:** `409` fuera de esa espera.
 
-### 6.6 `POST /api/camera/stop` — Terminar
+### 6.6 `POST /api/camera/stop` - Terminar
 
-Detiene el loop y libera la cámara. · **Errores:** `409` sin sesión activa.
+Detiene el loop y libera la cámara.; **Errores:** `409` sin sesión activa.
 
 ---
 

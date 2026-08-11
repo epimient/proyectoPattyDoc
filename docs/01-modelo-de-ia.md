@@ -1,4 +1,4 @@
-# 🧠 Modelo de IA
+# Modelo de IA
 
 ## 1. Resumen
 
@@ -45,7 +45,7 @@ Realizado por `app/models/preprocessing.py`:
 - **Categóricas:** los `NaN` se rellenan con la cadena `'No aplica'`.
 
 ### 3.2 Codificación
-- **Categóricas:** `LabelEncoder` (sklearn) → entero por clase. Se guarda un encoder por columna.
+- **Categóricas:** `LabelEncoder` (sklearn) -> entero por clase. Se guarda un encoder por columna.
 - **Targets:** antes de codificar, se toma el **primer ejercicio** de la cadena (separador `';'`) y se le aplica `LabelEncoder`. Si el dato trae varios ejercicios (`"Marcha; Elevación"`), solo se usa el primero para entrenar.
 
 ### 3.3 Escalado
@@ -58,13 +58,16 @@ Realizado por `app/models/preprocessing.py`:
 
 Definida en `app/models/neural.py`:
 
-```
-Input(10)
-  └── Dense(128, relu)
-        └── Dense(64, relu)
-              ├── Dense(9, softmax,  name='phase1')   → Calentamiento
-              ├── Dense(9, softmax,  name='phase2')   → Entrenamiento
-              └── Dense(7, softmax,  name='phase3')   → Enfriamiento
+```mermaid
+flowchart TD
+    I[Entrada: 10 características] --> D1[Dense 128, ReLU]
+    D1 --> D2[Dense 64, ReLU]
+    D2 --> P1[Salida phase1: 9 clases, softmax]
+    D2 --> P2[Salida phase2: 9 clases, softmax]
+    D2 --> P3[Salida phase3: 7 clases, softmax]
+    P1 --> C[Calentamiento]
+    P2 --> E[Entrenamiento]
+    P3 --> F[Enfriamiento]
 ```
 
 - **Optimizador:** Adam
@@ -106,20 +109,16 @@ Contiene todo lo necesario para **servir** sin depender del Excel:
 
 ## 6. Flujo de inferencia
 
-```
-Perfil JSON (humano)
-   │
-   ▼
-app/models/plan_service.py
-   │  1. Categorías → LabelEncoder.transform  (fallback si desconocida)
-   │  2. Numéricas  → StandardScaler.transform
-   │  3. model.predict(input)  → 3 distribuciones softmax
-   │  4. argmax por salida
-   ▼
-inverse_transform → nombres de ejercicio en español
-   │
-   ▼
-{ "calentamiento", "entrenamiento", "enfriamiento" }
+```mermaid
+flowchart TD
+    J[Perfil JSON] --> PS[PlanService]
+    PS --> LE[Codificar categorías con LabelEncoder]
+    LE --> SC[Escalar variables numéricas]
+    SC --> MP[Ejecutar model.predict]
+    MP --> SM[Obtener tres distribuciones softmax]
+    SM --> AM[Aplicar argmax por salida]
+    AM --> IT[Inverse transform]
+    IT --> R[Plan: calentamiento, entrenamiento y enfriamiento]
 ```
 
 ## 7. Reentrenamiento por feedback
@@ -130,4 +129,4 @@ Ver [`docs/04-flujo-de-feedback.md`](04-flujo-de-feedback.md). El modelo puede *
 3. Reentrena la red 10 épocas con el dataset completo + el nuevo ejemplo.
 4. Guarda `modelo5.keras` y `preprocessors.pkl` actualizados.
 
-> ⚠️ El reentrenamiento **modifica los artefactos de producción** (por diseño). En los tests se usa una copia temporal para no contaminarlos.
+> **Advertencia:** El reentrenamiento **modifica los artefactos de producción** (por diseño). En los tests se usa una copia temporal para no contaminarlos.

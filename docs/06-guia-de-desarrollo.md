@@ -1,11 +1,11 @@
-# 🛠️ Guía de desarrollo
+# Guía de desarrollo
 
 ## 1. Requisitos del entorno
 
 | Requisito | Versión |
 |-----------|---------|
 | Python | 3.12+ (proyecto original: 3.13 en Windows) |
-| pip | — |
+| pip | - |
 | GPU | Opcional (si no hay, TensorFlow usa CPU) |
 
 ## 2. Instalación
@@ -34,7 +34,7 @@ numpy==2.5.2
 scikit-learn==1.9.0
 openpyxl==3.1.5
 
-# Voz (app de escritorio / fase 2) — natural por defecto
+# Voz (app de escritorio / fase 2) - natural por defecto
 gtts==2.5.4
 pygame==2.6.1
 edge-tts==7.0.2
@@ -55,7 +55,7 @@ opencv-python==4.11.0.86
 pupil-apriltags==1.0.4.post11
 ```
 
-> 💡 **Voz:** el detector usa `gTTS` (voz natural, necesita internet). Para voces neurales: `--tts edge` con `--tts-voice es-ES-ElviraNeural`. `pyttsx3` (offline) solo como respaldo; en Linux requiere `sudo apt install espeak-ng`.
+> **Nota:** **Voz:** el detector usa `gTTS` (voz natural, necesita internet). Para voces neurales: `--tts edge` con `--tts-voice es-ES-ElviraNeural`. `pyttsx3` (offline) solo como respaldo; en Linux requiere `sudo apt install espeak-ng`.
 
 ## 3. Ejecución
 
@@ -68,7 +68,7 @@ pupil-apriltags==1.0.4.post11
 - Swagger UI: <http://127.0.0.1:8000/docs>
 - ReDoc: <http://127.0.0.1:8000/redoc>
 
-> 💡 Para silenciar los logs de TensorFlow en desarrollo: `TF_CPP_MIN_LOG_LEVEL=3`.
+> **Nota:** Para silenciar los logs de TensorFlow en desarrollo: `TF_CPP_MIN_LOG_LEVEL=3`.
 
 ### 3.2 Ejecutar los tests
 
@@ -88,7 +88,7 @@ Los tests cubren:
 | `tests/test_engine.py` | Máquina de estados del detector (sin necesidad de cámara) |
 | `tests/test_camera.py` | Endpoints de cámara, stream, calibración, avance manual, doble clic y conteo con tracker falso |
 
-**Detalle clave:** los tests de feedback usan un servicio sobre **artefactos temporales** (`tmp_path`) y los de sesión un **SQLite temporal**, vía `app.dependency_overrides` → los artefactos de producción (`artifacts/*`) quedan intactos.
+**Detalle clave:** los tests de feedback usan un servicio sobre **artefactos temporales** (`tmp_path`) y los de sesión un **SQLite temporal**, vía `app.dependency_overrides` -> los artefactos de producción (`artifacts/*`) quedan intactos.
 
 ## 4. Ejecución del detector (Fase 2)
 
@@ -109,7 +109,7 @@ Requisito: el backend corriendo.
 ./venv/bin/python -m app.vision --plan plan.json --camera-params 900,900,640,360
 ```
 
-**Teclas:** `c` calibrar postura · `n` siguiente ejercicio · `q` salir. La sentadilla se cuenta al completar de pie → profundidad → de pie; las etiquetas `0` y `1` deben permanecer visibles.
+**Teclas:** `c` calibrar postura; `n` siguiente ejercicio; `q` salir. La sentadilla se cuenta al completar de pie -> profundidad -> de pie; las etiquetas `0` y `1` deben permanecer visibles.
 
 ## 5. Scripts
 
@@ -147,7 +147,7 @@ Entrenamiento - Accuracy test: 74.00%
 Enfriamiento - Accuracy test: 85.00%
 ```
 
-> ⚠️ El entrenamiento **sobrescribe** `artifacts/modelo5.keras`. Usa con cuidado.
+> **Advertencia:** El entrenamiento **sobrescribe** `artifacts/modelo5.keras`. Usa con cuidado.
 > El feedback de la API crea un backup previo en `artifacts/backups/` antes de guardar artefactos reentrenados.
 
 ## 6. Estructura del código
@@ -158,13 +158,13 @@ app/
 ├── core/config.py           # Rutas, orígenes CORS y base URL de la API
 ├── models/
 │   ├── preprocessing.py     # preprocess_data, constantes de columnas
-│   ├── neural.py            # build_model (arquitectura 128→64→3 salidas)
+│   ├── neural.py            # build_model (arquitectura 128->64->3 salidas)
 │   ├── artifacts.py         # save_artifacts / load_artifacts
 │   ├── plan_service.py      # PlanService singleton: generate_plan, apply_feedback, list_exercises, health
 │   └── session_store.py     # SessionStore: sesiones y observaciones en SQLite
 ├── schemas/
-│   ├── plan.py              # Contratos Pydantic (UserProfile, PlanResponse, Feedback…)
-│   └── session.py           # Contratos Pydantic (Plan, ObservationRequest, CorrectionResponse…)
+│   ├── plan.py              # Contratos Pydantic (UserProfile, PlanResponse, Feedback...)
+│   └── session.py           # Contratos Pydantic (Plan, ObservationRequest, CorrectionResponse...)
 ├── services/correction_service.py  # Motor de corrección (reglas por plantilla)
 ├── routers/
 │   ├── plan.py              # /api/plan, /api/exercises, /api/feedback, /api/health

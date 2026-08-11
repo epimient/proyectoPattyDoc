@@ -1,22 +1,24 @@
-# 🎥 Fase 2 — Gemelo digital (detección de tags y corrección por voz)
+# Fase 2 - Gemelo digital (detección de tags y corrección por voz)
 
-> **Estado:** MVP implementado (sentadilla). Backend de sesiones ✅ · Motor de corrección ✅ · Detector de escritorio ✅ · Voz (TTS) ✅ · Plantillas: 1 de 25 ejercicios.
+> **Estado:** MVP implementado (sentadilla). Backend de sesiones ; Motor de corrección ; Detector de escritorio ; Voz (TTS) ; Plantillas: 1 de 25 ejercicios.
 
 ## 1. Visión de la solución
 
 El flujo completo del producto es:
 
-```
-1. El usuario genera su plan  →  POST /api/plan
-2. Pulsa "Comenzar"
-3. Se activa la cámara; la persona lleva tags (AprilTags) en los hombros
-4. El detector evalúa si ejecuta bien el ejercicio
-5. El sistema le habla, corrigiendo postura y contando repeticiones
+```mermaid
+flowchart TD
+    A[Generar plan personalizado] --> B[Iniciar sesión]
+    B --> C[Abrir cámara]
+    C --> D[Detectar AprilTags en hombros]
+    D --> E[Calibrar postura inicial]
+    E --> F[Evaluar movimiento y postura]
+    F --> G[Contar repeticiones y emitir correcciones]
 ```
 
 ## 2. El detector actual (`detector_tags (1).py`)
 
-> 📦 El prototipo original se archivó en `archived/detector_tags_v1.py` tras refactorizarlo a `app/vision/`. Demostró la mecánica de una **sentadilla** con AprilTags en los hombros:
+> El prototipo original se archivó en `archived/detector_tags_v1.py` tras refactorizarlo a `app/vision/`. Demostró la mecánica de una **sentadilla** con AprilTags en los hombros:
 
 | Aspecto | Detalle |
 |---------|---------|
@@ -25,17 +27,20 @@ El flujo completo del producto es:
 | Tags | ID 0 = hombro izquierdo, ID 1 = hombro derecho |
 | Tag size | 0.05 m |
 | Cámara (params) | `[600, 600, 320, 240]` (fx, fy, cx, cy) |
-| Pose | `detector.detect(gray, estimate_tag_pose=True, …)` → `pose_t` (traslación 3D) |
+| Pose | `detector.detect(gray, estimate_tag_pose=True, ...)` -> `pose_t` (traslación 3D) |
 | Lógica | Punto medio de hombros + máquina de estados de sentadilla |
 | Salida actual | Overlay con IDs, fase y repeticiones; voz en CLI y navegador |
 
 ### 2.1 Máquina de estados de la sentadilla
 
-```
-ESPERANDO → (calibración tecla 'c') → DE_PIE
-DE_PIE  --descenso > 0.1m-->  BAJANDO
-BAJANDO --descenso ≥ 0.35m--> SQUAT_PROFUNDO
-SQUAT_PROFUNDO --subida < 0.15m--> (postura OK?) repeticiones++ → DE_PIE
+```mermaid
+stateDiagram-v2
+    [*] --> ESPERANDO
+    ESPERANDO --> DE_PIE: Calibrar con tags 0 y 1
+    DE_PIE --> BAJANDO: descenso mayor a 0.10 m
+    BAJANDO --> SQUAT_PROFUNDO: descenso mínimo de 0.35 m
+    SQUAT_PROFUNDO --> DE_PIE: subida menor a 0.15 m y postura válida
+    DE_PIE --> DE_PIE: incrementar repetición al completar el ciclo
 ```
 
 ### 2.2 Calibración y conteo
@@ -44,7 +49,7 @@ Al iniciar un ejercicio compatible, el usuario se pone de pie y pulsa **Calibrar
 
 La interfaz expone `calibration_requested`, `detected_tags`, `hombros_visibles` y `calibrado`. Mientras busca, informa si no ve ninguna etiqueta, si falta una o si reconoce el patrón pero no puede estimar su pose.
 
-Una repetición solo se cuenta al completar el ciclo **DE_PIE → BAJANDO → SQUAT_PROFUNDO → DE_PIE**. Alcanzar `0.35 m` llena el indicador de profundidad, pero el conteo ocurre al volver por debajo de `0.15 m` con postura válida y ambas etiquetas visibles.
+Una repetición solo se cuenta al completar el ciclo **DE_PIE -> BAJANDO -> SQUAT_PROFUNDO -> DE_PIE**. Alcanzar `0.35 m` llena el indicador de profundidad, pero el conteo ocurre al volver por debajo de `0.15 m` con postura válida y ambas etiquetas visibles.
 
 ### 2.3 Estado y limitaciones actuales
 
@@ -67,24 +72,21 @@ app/vision/
 ├── engine.py        # SquatStateMachine (máquina de estados + ángulo de hombros)
 ├── tracker.py       # CameraTracker: cámara/video + detección AprilTags (pose 3D)
 ├── api_client.py    # Cliente HTTP mínimo (stdlib) hacia el backend
-└── tts.py           # Voz natural en español (gTTS → edge-tts → pyttsx3)
+└── tts.py           # Voz natural en español (gTTS -> edge-tts -> pyttsx3)
 ```
 
 **Diseño de la arquitectura (backend evalúa):**
 
-```
-Frontend Web ──POST /api/plan──► FastAPI ◄── Detector (desktop, cámara+tags)
-   (plan JSON)                          │
-        │                               │  POST /api/session/start → session_id
-        └── "Comenzar" ───────────────► Detector
-                                         │
-                                         ├─ POST /api/session/{id}/observation
-                                         │        (fase, desplazamiento, postura, reps)
-                                         │              ▼
-                                         │   Backend evalúa contra exercise_templates.json
-                                         │              ▼
-                                         └─ {level, message_es, siguiente_paso}
-                                               Detector habla la corrección
+```mermaid
+flowchart LR
+    F[Frontend web] -->|Plan y comandos| A[FastAPI]
+    D[Detector CLI] -->|Iniciar sesión y observaciones| A
+    A --> S[(SessionStore SQLite)]
+    A --> T[Plantillas de ejercicio]
+    T --> C[Motor de corrección]
+    A --> C
+    C -->|Nivel, mensaje y siguiente paso| D
+    D -->|Corrección por voz| U[Usuario]
 ```
 
 - El **detector** mantiene la máquina de estados en local (necesita la fase en tiempo real para el overlay y el conteo de reps) y envía observaciones cada frame.
@@ -96,15 +98,25 @@ Frontend Web ──POST /api/plan──► FastAPI ◄── Detector (desktop, 
 Desde la Fase 2 hay una **interfaz web** (React + Vite) que reemplaza la ventana
 de OpenCV como forma principal de interactuar:
 
-```
-Navegador (:5173)  ──POST /api/plan──►  API (:8000)
-   │  (perfil del usuario)                    │ modelo5.keras
-   │  ◄── plan (3 ejercicios) ────────────────┘
-   │  ──POST /api/camera/start {plan}──►  arranca el hilo de cámara
-   │  ◄── GET /api/camera/stream ───────  MJPEG con tags dibujados
-   │  ◄── GET /api/camera/state ─────────  polling (fase, reps, corrección)
-   │  ──POST /api/camera/calibrate|next|stop──►  comandos
-   Voz: speechSynthesis (es-ES) en el navegador
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend :5173
+    participant A as API :8000
+    participant C as CameraController
+    U->>F: Completar perfil
+    F->>A: POST /api/plan
+    A-->>F: Plan de tres fases
+    U->>F: Iniciar sesión
+    F->>A: POST /api/camera/start
+    A->>C: Abrir cámara e iniciar hilo
+    C-->>F: Stream MJPEG
+    loop Cada 200 ms
+        F->>A: GET /api/camera/state
+        A-->>F: Fase, tags, repeticiones y corrección
+    end
+    F->>A: calibrate, next o stop
+    F-->>U: Estado visible y voz
 ```
 
 - **La cámara la lee la API** (server-side, igual que el CLI): `CameraController`
