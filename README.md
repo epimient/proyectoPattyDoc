@@ -1,4 +1,4 @@
-# PattyDoc - Plan de Acondicionamiento Físico Personalizado con IA
+# Plan de Acondicionamiento Físico Personalizado con IA
 
 Sistema de **inteligencia artificial** que genera planes de ejercicio físico personalizados para **personas con discapacidad visual**. El proyecto integra un **modelo de redes neuronales (Keras/TensorFlow)**, un **backend API (FastAPI)** y un **gemelo digital operativo en MVP** (detección de AprilTags por cámara) que supervisa la ejecución del ejercicio en tiempo real y corrige al usuario por voz.
 
@@ -33,16 +33,16 @@ flowchart LR
 
 | Componente | Tecnología | Estado |
 |-------------|------------|--------|
-| **Backend API** | FastAPI + Uvicorn | Implementado |
-| **Modelo de IA** | Keras 3 / TensorFlow 2 | Entrenado (`modelo5.keras`) |
-| **Preprocesamiento** | scikit-learn (LabelEncoder, StandardScaler) | Implementado |
-| **Sesiones de ejercicio** | FastAPI + SQLite | Implementado |
-| **Motor de corrección** | Reglas por plantilla (`exercise_templates.json`) | Implementado (sentadilla) |
-| **Gemelo digital (detector de tags)** | OpenCV + pupil_apriltags + gTTS | MVP (sentadilla) |
-| **Frontend Web** | React + Vite (separado de la API) | Implementado y validado |
-| **Calibración AprilTags** | IDs 0 y 1, pose inicial y diagnóstico visible | Implementado |
-| **Conteo de sentadillas** | Ciclo de pie -> profundidad -> de pie | Implementado y validado |
-| **Ejercicios sin plantilla** | Ejecución manual con avance explícito | Implementado |
+| **Backend API** | FastAPI + Uvicorn |  Implementado |
+| **Modelo de IA** | Keras 3 / TensorFlow 2 |  Entrenado (`modelo5.keras`) |
+| **Preprocesamiento** | scikit-learn (LabelEncoder, StandardScaler) |  Implementado |
+| **Sesiones de ejercicio** | FastAPI + SQLite |  Implementado |
+| **Motor de corrección** | Reglas por plantilla (`exercise_templates.json`) |  Implementado (sentadilla) |
+| **Gemelo digital (detector de tags)** | OpenCV + pupil_apriltags + gTTS |  MVP (sentadilla) |
+| **Frontend Web** | React + Vite (separado de la API) |  Implementado y validado |
+| **Calibración AprilTags** | IDs 0 y 1, pose inicial y diagnóstico visible |  Implementado |
+| **Conteo de sentadillas** | Ciclo de pie → profundidad → de pie |  Implementado y validado |
+| **Ejercicios sin plantilla** | Ejecución manual con avance explícito |  Implementado |
 
 ---
 
@@ -68,10 +68,10 @@ proyectoPattyDoc/
 │       ├── engine.py             # Máquina de estados de sentadilla
 │       ├── tracker.py            # Cámara + detección AprilTags
 │       ├── api_client.py         # Cliente HTTP del backend
-│       └── tts.py                # Voz en español (gTTS -> edge-tts -> pyttsx3)
+│       └── tts.py                # Voz en español (gTTS → edge-tts → pyttsx3)
 ├── frontend/                     # Interfaz web (React + Vite, separada de la API)
-│   ├── src/components/           # ProfileForm, PlanSummary, SessionView, Gauge, ...
-│   └── vite.config.js            # proxy /api -> http://127.0.0.1:8000
+│   ├── src/components/           # ProfileForm, PlanSummary, SessionView, Gauge, …
+│   └── vite.config.js            # proxy /api → http://127.0.0.1:8000
 ├── artifacts/                    # Artefactos del modelo
 │   ├── modelo5.keras             # Red neuronal entrenada
 │   └── preprocessors.pkl         # Encoders, scaler y dataset codificado
@@ -117,7 +117,7 @@ python3 -m venv venv
 
 # 3. Levantar el backend + el frontend web juntos
 scripts/dev.sh
-# Front -> http://127.0.0.1:5173  ;  API -> http://127.0.0.1:8000 (/docs)
+# Front → http://127.0.0.1:5173   ·  API → http://127.0.0.1:8000 (/docs)
 
 # 4. Ejecutar los tests
 ./venv/bin/python -m pytest -q
@@ -133,7 +133,7 @@ Para arrancar solo la API (sin front):
 3. En el calentamiento manual pulsa **Siguiente** cuando termines.
 4. En sentadillas, muestra simultáneamente las AprilTag `tag36h11` con ID `0` y `1`.
 5. Pulsa **Calibrar postura** estando de pie.
-6. Completa cada repetición manteniendo las etiquetas visibles durante el ciclo **de pie -> bajar -> volver de pie**.
+6. Completa cada repetición manteniendo las etiquetas visibles durante el ciclo **de pie → bajar → volver de pie**.
 
 La repetición se registra al regresar a la postura inicial, no al alcanzar la profundidad máxima.
 
