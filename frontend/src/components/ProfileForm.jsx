@@ -93,7 +93,7 @@ export default function ProfileForm({ onGenerated }) {
                       max={NUMERIC[field].max}
                       step={NUMERIC[field].step}
                       value={form[field]}
-                      onChange={(ev) => setField(field, Number(ev.target.value))}
+                      onChange={(ev) => setField(field, ev.target.value === '' ? '' : Number(ev.target.value))}
                       required
                     />
                   </label>

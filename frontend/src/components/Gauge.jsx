@@ -5,12 +5,13 @@ export default function Gauge({ state, speaking }) {
   const reps = state?.repeticiones ?? 0
   const objetivo = state?.objetivo ?? 10
   const depth = state?.desplazamiento_y ?? 0
+  const depthTarget = state?.profundidad_objetivo_m ?? 0.35
   const posturaOk = state?.postura_ok ?? true
   const visibles = state?.hombros_visibles ?? false
   const fase = state?.fase ?? ''
 
   const completion = objetivo > 0 ? Math.min(reps / objetivo, 1) : 0
-  const descent = Math.max(0, Math.min(depth / 0.35, 1))
+  const descent = depthTarget > 0 ? Math.max(0, Math.min(depth / depthTarget, 1)) : 0
   const color = !visibles ? '#5A6B7D' : posturaOk ? '#1E7A46' : '#C63D3D'
 
   const dashed = `${descent * C} ${C}`

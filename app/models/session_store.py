@@ -89,6 +89,15 @@ class SessionStore:
             )
         return cur.rowcount > 0
 
+    def abandon_session(self, session_id: str) -> bool:
+        """Marca la sesión como 'abandoned' (terminada a medias o por error)."""
+        with self._lock, self._connect() as conn:
+            cur = conn.execute(
+                "UPDATE sessions SET status = 'abandoned', completed_at = ? WHERE id = ? AND status = 'active'",
+                (_now(), session_id),
+            )
+        return cur.rowcount > 0
+
     def add_observation(
         self,
         session_id: str,

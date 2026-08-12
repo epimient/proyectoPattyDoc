@@ -13,6 +13,18 @@ PHASES = ["calentamiento", "entrenamiento", "enfriamiento"]
 # Cooldown para repetir advertencias por voz (evita spam)
 WARNING_COOLDOWN_S = 3.0
 
+# Solo se envían observaciones en transiciones relevantes + un heartbeat de ~1 s,
+# para no escribir una fila por frame en la BD del backend.
+OBS_HEARTBEAT_S = 1.0
+
+
+def _should_send(obs: dict, last_sig, last_ts) -> tuple:
+    sig = (obs.get("fase"), obs.get("repeticiones"), obs.get("hombros_visibles"))
+    now = time.time()
+    if sig == last_sig and now - last_ts < OBS_HEARTBEAT_S:
+        return sig, last_ts, False
+    return sig, now, True
+
 
 def _obs(exercise: str, frame_ts: float, **kwargs) -> dict:
     base = {
@@ -64,6 +76,9 @@ def run_exercise(
     completed = False
     last_message = ""
     last_warn = 0.0
+    last_correction = {"level": "ok", "message_es": "", "siguiente_paso": "CONTINUAR"}
+    last_sig = None
+    last_sent_ts = 0.0
 
     speak(f"Comenzando {exercise}. Ponte de pie frente a la cámara y presiona C para calibrar.")
     try:
@@ -109,7 +124,10 @@ def run_exercise(
                         repeticiones=state["repeticiones"],
                         postura_correcta=postura_ok,
                     )
-                    correction = _send(client, session_id, obs)
+                    last_sig, last_sent_ts, do_send = _should_send(obs, last_sig, last_sent_ts)
+                    if do_send:
+                        last_correction = _send(client, session_id, obs)
+                    correction = last_correction
 
                     color = (0, 255, 0) if correction["level"] == "ok" else (0, 0, 255)
                     cv2.putText(frame, f"Fase: {state['fase']}", (20, 30),
@@ -135,7 +153,10 @@ def run_exercise(
                         speak(correction["message_es"])
                         speak("Pulsa N para pasar al siguiente ejercicio, o C para continuar.")
             else:
-                correction = _send(client, session_id, obs)
+                last_sig, last_sent_ts, do_send = _should_send(obs, last_sig, last_sent_ts)
+                if do_send:
+                    last_correction = _send(client, session_id, obs)
+                correction = last_correction
                 cv2.putText(frame, "HOMBROS NO VISIBLES", (20, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 last_message = _maybe_speak(

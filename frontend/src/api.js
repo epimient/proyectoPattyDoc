@@ -14,7 +14,9 @@ async function request(path, { method = 'GET', body } = {}) {
     } catch {
       /* cuerpo no JSON */
     }
-    throw new Error(detail)
+    const err = new Error(detail)
+    err.status = res.status
+    throw err
   }
   return res.json()
 }

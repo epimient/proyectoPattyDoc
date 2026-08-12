@@ -241,3 +241,68 @@ def test_controller_cuenta_una_repeticion(session_store):
     assert obs[-1]["fase"] in ("DE_PIE", "BAJANDO")
     assert fake.released is True
     assert ctrl.state["status"] in ("stopped", "completed")
+
+
+def test_controller_abandona_sesion_al_parar(session_store):
+    tracker = RepeatTracker()
+    store = session_store
+    ctrl = CameraController(tracker_factory=lambda source=0: tracker, store_getter=lambda: store)
+    # Todas las fases rastreadas para llegar a la sentadilla sin saltos manuales.
+    plan = {phase: SQUAT for phase in SAMPLE_PLAN}
+    session = store.create_session(plan)
+    session_id = session["session_id"]
+
+    ctrl._state.update(
+        status="running",
+        session_id=session_id,
+        plan=plan,
+        phase="calentamiento",
+        exercise=SQUAT,
+    )
+    ctrl._calibrate.set()
+
+    worker = threading.Thread(target=ctrl._run, args=(plan, tracker))
+    worker.start()
+    _wait_for_state(ctrl, {"calibrado": True})
+    ctrl.stop()
+    worker.join(timeout=1)
+
+    assert store.get_session(session_id)["status"] == "abandoned"
+    assert tracker.released is True
+    assert ctrl.state["status"] == "stopped"
+
+
+def test_observaciones_se_dedupan(session_store):
+    # 60 frames en la misma fase no deben generar 60 filas en la BD.
+    ys = [1.0] * 60
+    fake = FakeTracker(ys)
+    store = session_store
+    ctrl = CameraController(tracker_factory=lambda source=0: fake, store_getter=lambda: store)
+    plan = {phase: SQUAT for phase in SAMPLE_PLAN}
+    session = store.create_session(plan)
+    session_id = session["session_id"]
+
+    ctrl._state.update(
+        status="running",
+        session_id=session_id,
+        plan=plan,
+        phase="calentamiento",
+        exercise=SQUAT,
+    )
+    ctrl._calibrate.set()
+    ctrl._run(plan, fake)
+
+    obs = store.list_observations(session_id)
+    assert 0 < len(obs) < 10
+
+
+def test_calibration_message_cuando_pose_falla():
+    ctrl = CameraController()
+    c = ctrl._calibration_correction([0, 1])
+    assert "no puedo calcular su posición" in c["message_es"]
+
+    c = ctrl._calibration_correction([0])
+    assert "Falta la etiqueta 1" in c["message_es"]
+
+    c = ctrl._calibration_correction([])
+    assert "No detecto etiquetas" in c["message_es"]

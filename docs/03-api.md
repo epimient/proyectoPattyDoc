@@ -130,8 +130,8 @@ Verifica que el modelo y los preprocesadores están cargados.
 ```json
 {
   "model_loaded": true,
-  "model_path": "/home/eddy/Proyectos Python/proyectoPattyDoc/artifacts/modelo5.keras",
-  "preprocessors_path": "/home/eddy/Proyectos Python/proyectoPattyDoc/artifacts/preprocessors.pkl",
+  "model_path": "<ruta-del-proyecto>/artifacts/modelo5.keras",
+  "preprocessors_path": "<ruta-del-proyecto>/artifacts/preprocessors.pkl",
   "num_classes": {
     "Ejercicios Fase 1 de Calentamiento": 9,
     "Ejercicios Fase 2 de Entrenamiento": 9,
@@ -458,6 +458,8 @@ Marca la sesión como `completed` (y rellena `completed_at`).
 
 **Respuesta `200 OK`:** `SessionResponse` con `status: "completed"`.
 
+> **Estados posibles de `status`:** `active` (creada, en curso), `completed` (terminada de forma natural) y `abandoned` (terminada a medias: el usuario pulsa Terminar o el hilo de la cámara falla). Cuando el gemelo digital abandona una sesión, `completed_at` se rellena con la marca de fin.
+
 ### 5.6 Ejemplo de flujo completo (curl)
 
 ```bash
@@ -497,6 +499,7 @@ Devuelve el estado del controlador de cámara (para polling cada ~200 ms):
   "fase": "SQUAT_PROFUNDO",
   "repeticiones": 3,
   "objetivo": 10,
+  "profundidad_objetivo_m": 0.35,
   "desplazamiento_y": 0.38,
   "postura_ok": false,
   "hombros_visibles": true,
@@ -519,6 +522,7 @@ Campos de diagnóstico:
 - `detected_tags`: IDs AprilTag reconocidos en el frame, aunque la pose 3D falle.
 - `hombros_visibles`: existen poses 3D válidas simultáneas para los IDs `0` y `1`.
 - `fase`: `MANUAL`, `ESPERANDO`, `DE_PIE`, `BAJANDO` o `SQUAT_PROFUNDO`.
+- `profundidad_objetivo_m`: descenso objetivo del ejercicio actual (de su plantilla). Permite al frontend dibujar el medidor de profundidad sin valores fijos.
 
 ### 6.2 `GET /api/camera/stream` - Video MJPEG
 

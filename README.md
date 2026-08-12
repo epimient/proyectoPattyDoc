@@ -84,7 +84,6 @@ proyectoPattyDoc/
 │   └── train.py                  # Entrenamiento completo + métricas
 ├── tests/                        # Suite de pruebas (API + motor + detector)
 ├── archived/                     # Prototipos archivados (detector v1)
-├── Fallas y arreglos/            # Historial de bugs corregidos y pruebas de precisión
 ├── requirements.txt              # Dependencias del entorno
 └── pytest.ini                    # Configuración de pytest
 ```

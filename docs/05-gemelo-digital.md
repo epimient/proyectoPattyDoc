@@ -1,6 +1,6 @@
 # Fase 2 - Gemelo digital (detección de tags y corrección por voz)
 
-> **Estado:** MVP implementado (sentadilla). Backend de sesiones ; Motor de corrección ; Detector de escritorio ; Voz (TTS) ; Plantillas: 1 de 25 ejercicios.
+> **Estado:** MVP implementado (sentadilla). Backend de sesiones ✓ · Motor de corrección ✓ · Detector de escritorio ✓ · Voz (TTS) ✓ · Plantillas: 1 de 25 ejercicios.
 
 ## 1. Visión de la solución
 
@@ -16,7 +16,7 @@ flowchart TD
     F --> G[Contar repeticiones y emitir correcciones]
 ```
 
-## 2. El detector actual (`detector_tags (1).py`)
+## 2. El detector actual
 
 > El prototipo original se archivó en `archived/detector_tags_v1.py` tras refactorizarlo a `app/vision/`. Demostró la mecánica de una **sentadilla** con AprilTags en los hombros:
 
@@ -89,7 +89,7 @@ flowchart LR
     D -->|Corrección por voz| U[Usuario]
 ```
 
-- El **detector** mantiene la máquina de estados en local (necesita la fase en tiempo real para el overlay y el conteo de reps) y envía observaciones cada frame.
+- El **detector** mantiene la máquina de estados en local (necesita la fase en tiempo real para el overlay y el conteo de reps) y envía observaciones al backend. Para no saturar la BD, solo persiste **transiciones relevantes** (cambio de fase, corrección o repeticiones, pérdida/recuperación de hombros) más un heartbeat de ~1 s; el resto de frames se evalúa localmente.
 - El **backend** aplica las reglas de la plantilla y decide la corrección (`level`, `message_es`, `siguiente_paso`).
 - La **voz** la emite el detector con `app/vision/tts.py` (solo en transiciones relevantes y con cooldown, para no repetir).
 

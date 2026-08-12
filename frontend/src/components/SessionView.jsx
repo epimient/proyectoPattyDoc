@@ -8,6 +8,17 @@ import StatusPanel from './StatusPanel.jsx'
 
 const POLL_MS = 200
 
+// Misma lógica de habilitación que ControlButtons.jsx.
+function canDo(state) {
+  const status = state?.status ?? 'idle'
+  const trackingAvailable = state?.tracking_available === true
+  return {
+    calibrate: status === 'running' && trackingAvailable && !state?.calibrado && state?.calibration_requested !== true,
+    next: status === 'waiting_next',
+    stop: status === 'running' || status === 'waiting_next',
+  }
+}
+
 export default function SessionView({ plan, onExit }) {
   const [state, setState] = useState(null)
   const [error, setError] = useState(null)
@@ -118,11 +129,15 @@ export default function SessionView({ plan, onExit }) {
   }, [plan, say])
 
   const onCalibrate = useCallback(() => {
-    api.calibrate().then(setState).catch((e) => setError(String(e.message || e)))
+    api.calibrate().then(setState).catch((e) => {
+      if (e.status !== 409) setError(String(e.message || e))
+    })
   }, [])
 
   const onNext = useCallback(() => {
-    api.next().then(setState).catch((e) => setError(String(e.message || e)))
+    api.next().then(setState).catch((e) => {
+      if (e.status !== 409) setError(String(e.message || e))
+    })
   }, [])
 
   const onStop = useCallback(async () => {
@@ -138,13 +153,14 @@ export default function SessionView({ plan, onExit }) {
   useEffect(() => {
     const onKey = (e) => {
       const k = e.key.toLowerCase()
-      if (k === 'c') onCalibrate()
-      else if (k === 'n') onNext()
-      else if (k === 'q') onStop()
+      const allowed = canDo(state)
+      if (k === 'c' && allowed.calibrate) onCalibrate()
+      else if (k === 'n' && allowed.next) onNext()
+      else if (k === 'q' && allowed.stop) onStop()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onCalibrate, onNext, onStop])
+  }, [onCalibrate, onNext, onStop, state])
 
   const status = state?.status
   const completed = sessionStarted && status === 'completed'

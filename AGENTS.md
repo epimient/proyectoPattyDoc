@@ -23,7 +23,7 @@
 
 ## Key conventions & gotchas
 
-1. **CameraController is a singleton** (`app/vision/controller.py:401`). Its `__init__` injects `tracker_factory` and `store_getter` — **dependency_overrides don't apply to direct `get_store()` calls**; tests pass a custom `store_getter` lambda.
+1. **CameraController is a singleton** (`app/vision/controller.py:528`). Its `__init__` injects `tracker_factory` and `store_getter` — **dependency_overrides don't apply to direct `get_store()` calls**; tests pass a custom `store_getter` lambda.
 
 2. **TTS priority**: `gTTS` → `edge-tts` → `pyttsx3`. `edge-tts` returns 403 in sandbox; `pyttsx3` segfaults here (exit 139). `gTTS` is the reliable default. Env vars: `PATTYDOC_TTS`, `PATTYDOC_TTS_VOICE`.
 
@@ -62,7 +62,7 @@
 ## Test suite
 
 ```bash
-./venv/bin/python -m pytest -q          # all (38 tests)
+./venv/bin/python -m pytest -q          # all (46 tests)
 ./venv/bin/python -m pytest tests/test_camera.py -q  # camera endpoints + loop
 ```
 

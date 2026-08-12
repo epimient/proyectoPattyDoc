@@ -188,13 +188,6 @@ class PlanService:
             "num_classes": self.num_classes,
         }
 
-    def _build_model(self, input_dim: int):
-        return build_model(input_dim, [
-            self.num_classes[self.target_columns[0]],
-            self.num_classes[self.target_columns[1]],
-            self.num_classes[self.target_columns[2]],
-        ])
-
 
 _service = None
 

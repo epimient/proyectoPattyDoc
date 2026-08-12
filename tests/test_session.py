@@ -83,6 +83,16 @@ def test_unknown_session_returns_404(client, session_store):
     assert client.post("/api/session/inexistente/complete").status_code == 404
 
 
+def test_abandon_session(client, session_store):
+    sid = _start(client)["session_id"]
+    assert session_store.abandon_session(sid) is True
+    session = client.get(f"/api/session/{sid}").json()
+    assert session["status"] == "abandoned"
+    assert session["completed_at"] is not None
+    # Una sesión ya cerrada (completed/abandoned) no se puede abandonar de nuevo.
+    assert session_store.abandon_session(sid) is False
+
+
 def test_observation_validation_error(client, session_store):
     sid = _start(client)["session_id"]
     bad = _obs(repeticiones=-5)

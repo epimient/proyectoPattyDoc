@@ -27,8 +27,8 @@ FRAME_INTERVAL_S = 0.03
 
 def _placeholder_jpeg() -> bytes:
     img = np.full((480, 640, 3), 18, np.uint8)
-    cv2.putText(img, "Camara apagada", (150, 230), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (255, 255, 255), 2)
-    cv2.putText(img, "Empieza una sesion para activarla", (120, 275), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (210, 210, 210), 1)
+    cv2.putText(img, "Cámara apagada", (150, 230), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(img, "Empieza una sesión para activarla", (120, 275), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (210, 210, 210), 1)
     ok, buf = cv2.imencode(".jpg", img)
     return buf.tobytes()
 
@@ -43,6 +43,7 @@ def _default_state() -> dict:
         "fase": "",
         "repeticiones": 0,
         "objetivo": 0,
+        "profundidad_objetivo_m": 0.0,
         "desplazamiento_y": 0.0,
         "postura_ok": True,
         "hombros_visibles": False,
@@ -71,6 +72,8 @@ class CameraController:
         self._next = threading.Event()
         self._thread = None
         self._tracker = None
+        self._last_obs_sig = None
+        self._last_obs_ts = 0.0
 
     # ---------------------------------------------------------------- API
 
@@ -88,6 +91,8 @@ class CameraController:
         with self._lock:
             if self._state["status"] in ("running", "waiting_next"):
                 raise RuntimeError("Ya hay una sesión en curso")
+            if self._thread is not None and self._thread.is_alive():
+                raise RuntimeError("La sesión anterior todavía está cerrando")
             try:
                 tracker = self._factory(source=source)
             except Exception as e:  # noqa: BLE001
@@ -101,6 +106,8 @@ class CameraController:
             self._stop.clear()
             self._calibrate.clear()
             self._next.clear()
+            self._last_obs_sig = None
+            self._last_obs_ts = 0.0
             self._state = _default_state()
             self._state.update(
                 {
@@ -147,6 +154,11 @@ class CameraController:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=5)
+        # El hilo puede no haber terminado de escribir su estado; fijamos el
+        # estado final aquí para que stop() sea determinista.
+        with self._lock:
+            if self._state["status"] in ("running", "waiting_next"):
+                self._state["status"] = "stopped"
         return self.state
 
     def shutdown(self):
@@ -169,6 +181,18 @@ class CameraController:
             with self._lock:
                 if self._state["status"] in ("running", "waiting_next"):
                     self._state["status"] = "stopped"
+            self._abandon_if_incomplete()
+
+    def _abandon_if_incomplete(self):
+        """Si la sesión no terminó de forma natural, se marca 'abandoned' en BD."""
+        with self._lock:
+            status = self._state["status"]
+            session_id = self._state["session_id"]
+        if session_id and status != "completed":
+            try:
+                self._store_getter().abandon_session(session_id)
+            except Exception as e:  # noqa: BLE001
+                print(f"[camera] No se pudo abandonar la sesión: {e}", flush=True)
 
     def _loop(self, plan: dict, tracker):
         store = self._store_getter()
@@ -187,6 +211,7 @@ class CameraController:
                 detected_tags=[],
                 repeticiones=0,
                 objetivo=0,
+                profundidad_objetivo_m=0.0,
                 correction={
                     "level": "info",
                     "message_es": f"Fase {phase}: {exercise}",
@@ -236,6 +261,7 @@ class CameraController:
             detected_tags=[],
             repeticiones=0,
             objetivo=objetivo,
+            profundidad_objetivo_m=template["profundidad_objetivo_m"],
             desplazamiento_y=0.0,
             postura_ok=True,
             correction={
@@ -355,6 +381,7 @@ class CameraController:
                 self._update_state(
                     hombros_visibles=False,
                     detected_tags=self._tag_ids(det),
+                    desplazamiento_y=0.0,
                     correction=correction,
                 )
 
@@ -376,23 +403,27 @@ class CameraController:
 
     # -------------------------------------------------------------- helpers
 
-    
     def _tag_ids(self, det: dict) -> list[int]:
         return sorted(
             int(tag_id)
             for tag_id in det.get("detected_ids", det.get("positions_3d", {}))
         )
 
-    
     def _calibration_correction(self, tag_ids: list[int]) -> dict:
         found = set(tag_ids)
-        missing = [tag_id for tag_id in (ID_HOMBRO_IZQ, ID_HOMBRO_DER) if tag_id not in found]
-        if not tag_ids:
+        if ID_HOMBRO_IZQ in found and ID_HOMBRO_DER in found:
+            # Se ven ambas etiquetas pero la pose 3D no se pudo estimar.
+            message = (
+                "Veo las etiquetas 0 y 1, pero no puedo calcular su posición. "
+                "Ponlas planas, de frente y sin reflejos."
+            )
+        elif not tag_ids:
             message = "No detecto etiquetas. Acerca las AprilTag 0 y 1 y evita reflejos."
-        elif len(missing) == 1:
-            message = f"Detecté {tag_ids}. Falta la etiqueta {missing[0]}."
+        elif len(found) == 1:
+            missing = [tag_id for tag_id in (ID_HOMBRO_IZQ, ID_HOMBRO_DER) if tag_id not in found]
+            message = f"Detecté {sorted(found)}. Falta la etiqueta {missing[0]}."
         else:
-            message = f"Detecté {tag_ids}, pero necesito las etiquetas 0 y 1."
+            message = f"Detecté {sorted(found)}, pero necesito las etiquetas 0 y 1."
         return {
             "level": "warning",
             "message_es": message,
@@ -425,7 +456,24 @@ class CameraController:
             "repeticiones": 0,
         }
 
+    # Solo se persisten transiciones relevantes + un heartbeat de ~1 s, para
+    # no escribir una fila por frame (~33/s) en SQLite.
+    OBS_HEARTBEAT_S = 1.0
+
     def _record_observation(self, session_id: str, obs: dict, correction: dict):
+        signature = (
+            obs.get("fase"),
+            obs.get("repeticiones"),
+            correction.get("level"),
+            correction.get("siguiente_paso"),
+            obs.get("hombros_visibles"),
+        )
+        now = time.time()
+        with self._lock:
+            if signature == self._last_obs_sig and now - self._last_obs_ts < self.OBS_HEARTBEAT_S:
+                return
+            self._last_obs_sig = signature
+            self._last_obs_ts = now
         try:
             store = self._store_getter()
             store.add_observation(session_id, obs, correction)
