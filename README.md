@@ -41,7 +41,7 @@ flowchart LR
 | **Gemelo digital (detector de tags)** | OpenCV + pupil_apriltags + gTTS |  MVP (sentadilla) |
 | **Frontend Web** | React + Vite (separado de la API) |  Implementado y validado |
 | **Calibración AprilTags** | IDs 0 y 1, pose inicial y diagnóstico visible |  Implementado |
-| **Conteo de sentadillas** | Ciclo de pie → profundidad → de pie |  Implementado y validado |
+| **Conteo de sentadillas** | Ciclo de pie → profundidad → de pie, con confirmación de voz |  Implementado y validado |
 | **Ejercicios sin plantilla** | Ejecución manual con avance explícito |  Implementado |
 
 ---
@@ -137,6 +137,14 @@ Para arrancar solo la API (sin front):
 
 La repetición se registra al regresar a la postura inicial, no al alcanzar la profundidad máxima.
 
+Durante la sesión, la voz confirma los eventos importantes: repetición contada,
+repetición rechazada por postura, profundidad alcanzada y meta completada. Si una
+repetición no cuenta, se explica el motivo y se indica cómo intentarla de nuevo.
+
+Para probar correctamente los cambios de voz, detén la API y el frontend por
+completo antes de volver a ejecutar `scripts/dev.sh`; el script no usa recarga
+automática de Uvicorn.
+
 ---
 
-_Documentación actualizada el 11 de agosto de 2026 contra el MVP operativo: modelo, API, frontend y seguimiento de sentadillas._
+_Documentación actualizada el 12 de agosto de 2026 contra el MVP operativo: modelo, API, frontend, seguimiento de sentadillas y eventos de voz._

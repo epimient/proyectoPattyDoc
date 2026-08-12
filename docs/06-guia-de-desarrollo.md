@@ -83,7 +83,7 @@ Los tests cubren:
 | `tests/test_health_exercises.py` | `/api/health` y `/api/exercises` |
 | `tests/test_plan.py` | `/api/plan`: generación, aliases, fallback y validación |
 | `tests/test_feedback.py` | `/api/feedback`: sin reentrenar, reentrenamiento y no contaminación de artefactos |
-| `tests/test_session.py` | Sesiones: crear, consultar, observaciones, historial, completar, 404 y validación |
+| `tests/test_session.py` | Sesiones: crear, consultar, observaciones, historial, completar, abandonar, 404 y validación |
 | `tests/test_correction.py` | Motor de corrección: rep válida, postura, profundidad, sin hombros, completado |
 | `tests/test_engine.py` | Máquina de estados del detector (sin necesidad de cámara) |
 | `tests/test_camera.py` | Endpoints de cámara, stream, calibración, avance manual, doble clic y conteo con tracker falso |
@@ -109,7 +109,7 @@ Requisito: el backend corriendo.
 ./venv/bin/python -m app.vision --plan plan.json --camera-params 900,900,640,360
 ```
 
-**Teclas:** `c` calibrar postura; `n` siguiente ejercicio; `q` salir. La sentadilla se cuenta al completar de pie -> profundidad -> de pie; las etiquetas `0` y `1` deben permanecer visibles.
+**Teclas:** `c` calibrar postura; `n` siguiente ejercicio; `q` salir. El frontend solo envía cada comando cuando el estado lo permite y trata un `409` adelantado como no-op. La sentadilla se cuenta al completar de pie -> profundidad -> de pie; las etiquetas `0` y `1` deben permanecer visibles. La voz confirma cada repetición contada o rechazada y la finalización de la meta.
 
 ## 5. Scripts
 

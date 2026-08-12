@@ -29,7 +29,7 @@
 
 3. **Template matching** (`app/services/correction_service.py:30-42`): `_normalize` strips accents/lowercases; `get_template` does bidirectional substring match (so `"(Fuerza y Resistencia) Sentadillas..."` matches `"Sentadillas asistidas..."`).
 
-4. **Frontend**: `StrictMode` disabled in `main.jsx` to avoid double `startCamera`. Web Speech API used for voice (not server TTS).
+4. **Frontend**: `StrictMode` disabled in `main.jsx` to avoid double `startCamera`. Web Speech API used for voice (not server TTS). Voice-priority events (`repeticion_contada`, `repeticion_rechazada`, `profundidad_alcanzada`, `ejercicio_completado`) are exposed in camera state and latched long enough for 200 ms polling.
 
 5. **Camera source**: `CAMERA_SOURCE` in `app/core/config.py` defaults to `0` (first webcam). `scripts/dev.sh` starts API on `8000` + front on `5173`.
 
@@ -62,7 +62,7 @@
 ## Test suite
 
 ```bash
-./venv/bin/python -m pytest -q          # all (46 tests)
+./venv/bin/python -m pytest -q          # all (48 tests)
 ./venv/bin/python -m pytest tests/test_camera.py -q  # camera endpoints + loop
 ```
 

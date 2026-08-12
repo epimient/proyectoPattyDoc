@@ -234,7 +234,7 @@ El medidor mide `200px` por `200px` y tiene tres capas:
 2. Arco ámbar para la profundidad instantánea.
 3. Arco interior para las repeticiones completadas.
 
-El progreso interior es gris cuando no hay etiquetas visibles, verde con postura correcta y rojo cuando se requiere corrección. La etiqueta central cambia entre `SIGUE BAJANDO`, `VUELVE DE PIE` y `REPETICIONES`.
+El progreso interior es gris cuando no hay etiquetas visibles, verde con postura correcta y rojo cuando se requiere corrección. La etiqueta central cambia entre `SIGUE BAJANDO`, `VUELVE DE PIE` y `REPETICIONES`. La profundidad objetivo viene de la plantilla del ejercicio, no de un valor fijo del frontend.
 
 El medidor es un refuerzo visual marcado como decorativo para tecnologías de asistencia. La información equivalente está en el panel de estado y en la voz.
 
@@ -305,7 +305,8 @@ flowchart LR
     A[De pie] --> B[Bajando]
     B --> C[Sentadilla profunda]
     C --> D[Regreso de pie]
-    D -->|Suma una repetición| A
+    D -->|Postura válida: suma una repetición| A
+    D -->|Postura incorrecta: rechaza y explica| A
 ```
 
 La barra de profundidad puede completarse sin sumar una repetición si la persona todavía no ha regresado a la postura de pie.
@@ -320,7 +321,12 @@ La síntesis usa Web Speech API mediante `window.speechSynthesis`:
 - Un mensaje nuevo cancela el anterior para evitar superposición.
 - La salida se detiene al desmontar o terminar la sesión.
 
-Se anuncian la generación y el resumen del plan, el inicio, los cambios de fase, correcciones nuevas, espera de avance, finalización y errores. Mientras el navegador habla, el medidor muestra un anillo animado; este efecto es complementario.
+Se anuncian la generación y el resumen del plan, el inicio, los cambios de fase,
+la profundidad alcanzada, cada repetición contada, cada repetición rechazada con
+su motivo, la espera de avance, la finalización y los errores. Los eventos tienen
+un identificador para no repetirse durante el polling y se conservan el tiempo
+suficiente para no perderlos. Mientras el navegador habla, el medidor muestra un
+anillo animado; este efecto es complementario.
 
 ## 8. Accesibilidad
 
@@ -347,7 +353,9 @@ Se anuncian la generación y el resumen del plan, el inicio, los cambios de fase
 | `N` | Siguiente | Ejercicio terminado |
 | `Q` | Terminar | Sesión activa |
 
-Los atajos complementan los botones; nunca los sustituyen.
+Los atajos complementan los botones; nunca los sustituyen. El frontend valida el
+estado antes de llamar a la API y un `409` por una condición adelantada se trata
+silenciosamente como una acción que ya no aplica.
 
 ### Movimiento reducido
 

@@ -95,6 +95,12 @@ flowchart LR
 
 ### 3.0 Interfaz web (recomendada)
 
+La interfaz web usa una consola audible: el backend calcula el estado por frame,
+pero la voz anuncia solo eventos relevantes. Se confirman la profundidad
+alcanzada, cada repetición contada, cada repetición rechazada y la meta del
+ejercicio. Los eventos permanecen en `/api/camera/state` hasta que aparece otro,
+porque el frontend consulta el estado cada aproximadamente 200 ms.
+
 Desde la Fase 2 hay una **interfaz web** (React + Vite) que reemplaza la ventana
 de OpenCV como forma principal de interactuar:
 
@@ -163,6 +169,10 @@ sequenceDiagram
 
 ## 4. Plantillas de ejercicio
 
+La plantilla define la meta y los umbrales de movimiento. La máquina de estados
+devuelve `rep_valid` cuando cuenta el ciclo y `rep_rejected` con motivo `postura`
+cuando la persona vuelve de pie pero no cumple la alineación de hombros.
+
 Las plantillas viven en `data/exercise_templates.json` y son la **fuente única** de parámetros (las leen tanto el backend para las reglas como el detector para la máquina de estados). Hoy está implementada la **sentadilla**:
 
 ```json
@@ -188,6 +198,20 @@ Las plantillas viven en `data/exercise_templates.json` y son la **fuente única*
 Para añadir un ejercicio nuevo basta con agregar su plantilla (y, cuando aplique, una nueva mecánica en `app/vision/engine.py`). Los placeholders `{reps}` y `{objetivo}` se interpolan en las reglas.
 
 ## 5. Corrección por voz
+
+En el flujo web, `CorrectionResponse` separa el mensaje general de los eventos
+prioritarios para voz:
+
+| Evento | Confirmación hablada |
+|---|---|
+| `profundidad_alcanzada` | Debe volver completamente de pie. |
+| `repeticion_contada` | Indica el número de repetición y la meta. |
+| `repeticion_rechazada` | Explica que no contó y corrige la postura. |
+| `ejercicio_completado` | Confirma la meta y las acciones Siguiente/Terminar. |
+
+`id_evento_voz` evita repetir un evento durante el polling. `voice.js` escucha
+`voiceschanged`, selecciona una voz en español y cancela también locuciones que
+estén esperando el retardo de reproducción.
 
 Para usuarios con discapacidad visual, la salida principal es **audio**:
 

@@ -37,6 +37,7 @@ frontend/
 6. La sentadilla habilita **Calibrar postura**. Durante la búsqueda se muestran los IDs AprilTag detectados.
 7. La repetición se cuenta al completar **de pie -> bajada profunda -> vuelta de pie**, con las etiquetas `0` y `1` visibles.
 8. El visor conserva el cuadro completo en relación 4:3 (`object-fit: contain`), sin recortar la cámara.
+9. La voz confirma los eventos de movimiento: repetición contada, repetición rechazada por postura, profundidad alcanzada y ejercicio completado.
 
 ### Estados relevantes
 
@@ -47,6 +48,7 @@ frontend/
 | `SQUAT_PROFUNDO` | “VUELVE DE PIE” | Mantener tags visibles y subir |
 | `waiting_next` + meta alcanzada | Ejercicio completado | Siguiente o Terminar |
 | `completed` | Sesión completada | Volver al plan |
+| `stopped` | Sesión detenida | Volver al plan |
 
 ## Ejecutar
 
@@ -78,14 +80,23 @@ VITE_API_TARGET=http://127.0.0.1:8001 npm run dev -- --port 5174
 - **Firma:** el **gauge** de repeticiones pulsa como una onda sonora cada vez que
   el asistente habla (clase `gauge--speaking` + `prefers-reduced-motion`).
 - Accesibilidad: botones >= 64 px, foco visible, `aria-live` en el panel de estado,
-  atajos de teclado C/N/Q, y toda la información también por voz.
+  atajos de teclado C/N/Q validados contra el estado actual, y toda la información
+  importante también por voz.
 
 ## Voz (Web Speech API)
 
 El servidor no sintetiza audio en el flujo web: envía el texto de la corrección
 en `/api/camera/state` y el navegador lo habla con `speechSynthesis` en español
-(`src/voice.js`). Si no hay voz en español disponible, el texto sigue visible
-en pantalla.
+(`src/voice.js`). Para eventos prioritarios también envía `evento_voz`,
+`mensaje_voz` e `id_evento_voz`; el frontend anuncia cada identificador una sola
+vez.
+
+Los eventos se conservan en el estado hasta que aparece otro, porque el frontend
+consulta cada 200 ms. `voice.js` selecciona una voz cuyo idioma empieza por `es`,
+escucha `voiceschanged`, cancela la frase anterior y evita reproducir timers
+pendientes cuando la sesión termina. La prioridad es: evento de repetición o
+meta, corrección urgente, cambio de fase y mensaje general. Si no hay voz en
+español disponible, el texto sigue visible en pantalla.
 
 ## Producción
 

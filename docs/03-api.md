@@ -411,6 +411,7 @@ El endpoint central del gemelo digital: **el backend evalúa** la observación c
 | `repeticiones` | `int` | `>= 0` | Repeticiones válidas contadas |
 | `rep_valid` | `boolean` | - | Indica que el último ciclo acaba de contar una repetición |
 | `rep_rejected` | `boolean` | - | Indica que el último ciclo terminó sin contar por postura |
+| `rep_rejection_reason` | `string` | - | Motivo del rechazo; actualmente `postura` |
 
 ```json
 {
@@ -448,9 +449,25 @@ Ejemplos:
 
 Si el ejercicio **no tiene plantilla**: `{ "level": "ok", "message_es": "Ejercicio sin plantilla de evaluación aún", "siguiente_paso": "CONTINUAR" }`.
 
-Cada observación queda registrada en el historial y actualiza `current_exercise`.
+Cada observación que el cliente envía queda registrada en el historial y actualiza
+`current_exercise`. El controlador de cámara y el CLI evalúan todos los frames,
+pero solo envían/persisten transiciones relevantes y un heartbeat aproximado de
+un segundo para evitar una fila por frame.
 
 **Errores:** `404` sesión inexistente; `422` contrato inválido.
+
+Ejemplo de evento de repetición contada:
+
+```json
+{
+  "level": "ok",
+  "message_es": "Repeticion 3 de 10 completada correctamente.",
+  "siguiente_paso": "CONTINUAR",
+  "evento_voz": "repeticion_contada",
+  "mensaje_voz": "Repeticion 3 de 10 completada correctamente. Puedes iniciar la siguiente.",
+  "id_evento_voz": "repeticion_contada:3"
+}
+```
 
 ### 5.4 `GET /api/session/{session_id}/observations` - Historial
 
@@ -492,6 +509,13 @@ El backend también ejecuta el **detector de tags en un hilo propio** y lo expon
 al frontend web. El navegador solo muestra el video (MJPEG) y envía comandos.
 
 ### 6.1 `GET /api/camera/state` - Estado en tiempo real
+
+La propiedad `correction` puede incluir un evento prioritario de voz. Los eventos
+posibles son `profundidad_alcanzada`, `repeticion_contada`,
+`repeticion_rechazada` y `ejercicio_completado`. `id_evento_voz` permite al
+frontend anunciar cada evento una sola vez. El controlador conserva el evento en
+el estado hasta que aparece otro para que el polling de aproximadamente 200 ms
+no lo pierda.
 
 Devuelve el estado del controlador de cámara (para polling cada ~200 ms):
 
