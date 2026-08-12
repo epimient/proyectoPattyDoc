@@ -123,6 +123,9 @@ def run_exercise(
                         desplazamiento_y=state["desplazamiento_y"],
                         repeticiones=state["repeticiones"],
                         postura_correcta=postura_ok,
+                        rep_valid=state["rep_valid"],
+                        rep_rejected=state["rep_rejected"],
+                        rep_rejection_reason=state["rep_rejection_reason"],
                     )
                     last_sig, last_sent_ts, do_send = _should_send(obs, last_sig, last_sent_ts)
                     if do_send:

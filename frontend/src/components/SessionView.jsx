@@ -27,6 +27,7 @@ export default function SessionView({ plan, onExit }) {
   const [speaking, setSpeaking] = useState(false)
 
   const lastMessage = useRef('')
+  const lastVoiceEvent = useRef('')
   const lastPhase = useRef('')
   const lastStatus = useRef('')
 
@@ -46,8 +47,18 @@ export default function SessionView({ plan, onExit }) {
       if (!s) return
       const { status, phase, correction } = s
       const message = correction?.message_es || ''
+      const voiceEvent = correction?.evento_voz || ''
+      const voiceMessage = correction?.mensaje_voz || message
+      const voiceEventKey = correction?.id_evento_voz || (voiceEvent ? `${voiceEvent}:${voiceMessage}` : '')
+      const isNewVoiceEvent = voiceEventKey && voiceEventKey !== lastVoiceEvent.current
 
-      if (status === 'waiting_next' && lastStatus.current !== 'waiting_next') {
+      if (isNewVoiceEvent) {
+        const action = voiceEvent === 'ejercicio_completado' && status === 'waiting_next'
+          ? ' Pulsa Siguiente para continuar o Terminar para salir.'
+          : ''
+        say(`${voiceMessage}${action}`)
+        lastVoiceEvent.current = voiceEventKey
+      } else if (status === 'waiting_next' && lastStatus.current !== 'waiting_next') {
         say(
           s.tracking_available
             ? 'Ejercicio completado. Pulsa Siguiente para continuar o Terminar para salir.'
@@ -58,12 +69,12 @@ export default function SessionView({ plan, onExit }) {
       }
       lastStatus.current = status
 
-      if (phase && phase !== lastPhase.current) {
+      if (!isNewVoiceEvent && phase && phase !== lastPhase.current) {
         say(`Fase ${phase}.`)
       }
       lastPhase.current = phase
 
-      if (message && message !== lastMessage.current) {
+      if (!isNewVoiceEvent && message && message !== lastMessage.current) {
         say(message)
       }
       lastMessage.current = message

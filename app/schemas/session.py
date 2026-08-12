@@ -34,9 +34,15 @@ class ObservationRequest(BaseModel):
     postura_correcta: bool = True
     hombros_visibles: bool = False
     repeticiones: int = Field(default=0, ge=0)
+    rep_valid: bool = False
+    rep_rejected: bool = False
+    rep_rejection_reason: str = ""
 
 
 class CorrectionResponse(BaseModel):
     level: str
     message_es: str
     siguiente_paso: str
+    evento_voz: str | None = None
+    mensaje_voz: str | None = None
+    id_evento_voz: str | None = None

@@ -47,6 +47,8 @@ def test_postura_mala_no_cuenta():
     state = sm.update(1.10, False)
     assert state["repeticiones"] == 0
     assert state["rep_valid"] is False
+    assert state["rep_rejected"] is True
+    assert state["rep_rejection_reason"] == "postura"
 
 
 def test_desplazamiento_insuficiente_no_avanza():

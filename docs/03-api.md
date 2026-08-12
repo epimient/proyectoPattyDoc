@@ -409,6 +409,8 @@ El endpoint central del gemelo digital: **el backend evalúa** la observación c
 | `postura_correcta` | `boolean` | - | Hombros nivelados (dentro de tolerancia) |
 | `hombros_visibles` | `boolean` | - | Si los tags de los hombros están visibles |
 | `repeticiones` | `int` | `>= 0` | Repeticiones válidas contadas |
+| `rep_valid` | `boolean` | - | Indica que el último ciclo acaba de contar una repetición |
+| `rep_rejected` | `boolean` | - | Indica que el último ciclo terminó sin contar por postura |
 
 ```json
 {
@@ -429,6 +431,9 @@ El endpoint central del gemelo digital: **el backend evalúa** la observación c
 | `level` | `string` | `ok`; `warning`; `error` |
 | `message_es` | `string` | Corrección en español (para TTS) |
 | `siguiente_paso` | `string` | `CONTINUAR`; `REPETIR`; `AVANZAR` |
+| `evento_voz` | `string \| null` | `repeticion_contada`; `repeticion_rechazada`; `profundidad_alcanzada`; `ejercicio_completado` |
+| `mensaje_voz` | `string \| null` | Mensaje prioritario para anunciar por voz una sola vez |
+| `id_evento_voz` | `string \| null` | Identificador único para no repetir ni perder el evento durante el polling |
 
 Ejemplos:
 
@@ -436,6 +441,7 @@ Ejemplos:
 { "level": "ok", "message_es": "Excelente, repetición válida (3/10)", "siguiente_paso": "CONTINUAR" }
 { "level": "warning", "message_es": "Baja un poco más para completar la sentadilla", "siguiente_paso": "CONTINUAR" }
 { "level": "warning", "message_es": "Sube con la espalda recta, mantén los hombros nivelados", "siguiente_paso": "REPETIR" }
+{ "level": "warning", "message_es": "La repetición no contó porque la postura no era correcta.", "siguiente_paso": "REPETIR", "evento_voz": "repeticion_rechazada", "mensaje_voz": "La repetición no contó. Mantén los hombros nivelados y vuelve a intentarlo." }
 { "level": "error", "message_es": "Colócate frente a la cámara para que pueda ver tus hombros", "siguiente_paso": "CONTINUAR" }
 { "level": "ok", "message_es": "¡Sentadillas completadas! Meta: 10 repeticiones", "siguiente_paso": "AVANZAR" }
 ```

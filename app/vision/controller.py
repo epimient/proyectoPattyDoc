@@ -317,6 +317,9 @@ class CameraController:
                     desplazamiento_y=state["desplazamiento_y"],
                     repeticiones=state["repeticiones"],
                     postura_correcta=postura_ok,
+                    rep_valid=state["rep_valid"],
+                    rep_rejected=state["rep_rejected"],
+                    rep_rejection_reason=state["rep_rejection_reason"],
                 )
                 correction = evaluate_correction(
                     exercise, ObservationRequest(**obs)
@@ -330,7 +333,11 @@ class CameraController:
                         "level": "info",
                         "message_es": "Profundidad alcanzada. Ahora vuelve a estar de pie para contar la repetición.",
                         "siguiente_paso": "SUBIR",
+                        "evento_voz": "profundidad_alcanzada",
+                        "mensaje_voz": "Profundidad alcanzada. Ahora vuelve completamente de pie para contar la repetición.",
+                        "id_evento_voz": "profundidad_alcanzada",
                     }
+                correction = self._latch_voice_event(correction)
                 self._record_observation(session_id, obs, correction)
                 self._update_state(
                     fase=state["fase"],
@@ -352,6 +359,9 @@ class CameraController:
                             "level": "ok",
                             "message_es": "¡Ejercicio completado! Pulsa Siguiente.",
                             "siguiente_paso": "NEXT",
+                            "evento_voz": "ejercicio_completado",
+                            "mensaje_voz": "Has completado todas las repeticiones. Pulsa Siguiente para continuar o Terminar para salir.",
+                            "id_evento_voz": "ejercicio_completado",
                         },
                     )
                     if not self._wait_next(tracker):
@@ -377,6 +387,7 @@ class CameraController:
                     "message_es": message,
                     "siguiente_paso": "CONTINUAR",
                 }
+                correction = self._latch_voice_event(correction)
                 self._record_observation(session_id, obs, correction)
                 self._update_state(
                     hombros_visibles=False,
@@ -454,6 +465,26 @@ class CameraController:
             "postura_correcta": True,
             "hombros_visibles": bool(hombros),
             "repeticiones": 0,
+        }
+
+    def _latch_voice_event(self, correction: dict) -> dict:
+        """Conserva el último evento de voz hasta que aparezca otro.
+
+        El loop de cámara actualiza el estado varias veces por segundo y el
+        frontend consulta cada ~200 ms; sin esta retención un evento de un
+        solo frame podía desaparecer antes de ser leído.
+        """
+        if correction.get("evento_voz"):
+            return correction
+        with self._lock:
+            previous = self._state.get("correction", {})
+        if not previous.get("evento_voz"):
+            return correction
+        return {
+            **correction,
+            "evento_voz": previous.get("evento_voz"),
+            "mensaje_voz": previous.get("mensaje_voz"),
+            "id_evento_voz": previous.get("id_evento_voz"),
         }
 
     # Solo se persisten transiciones relevantes + un heartbeat de ~1 s, para

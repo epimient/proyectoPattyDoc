@@ -30,10 +30,14 @@ class SquatStateMachine:
                 "desplazamiento_y": 0.0,
                 "repeticiones": 0,
                 "rep_valid": False,
+                "rep_rejected": False,
+                "rep_rejection_reason": "",
             }
 
         desplazamiento_y = y_actual - self.y_inicial
         rep_valid = False
+        rep_rejected = False
+        rep_rejection_reason = ""
         tpl = self.template
 
         if self.fase == "DE_PIE":
@@ -47,6 +51,9 @@ class SquatStateMachine:
                 if postura_correcta:
                     self.repeticiones += 1
                     rep_valid = True
+                else:
+                    rep_rejected = True
+                    rep_rejection_reason = "postura"
                 self.fase = "DE_PIE"
 
         return {
@@ -54,6 +61,8 @@ class SquatStateMachine:
             "desplazamiento_y": round(desplazamiento_y, 3),
             "repeticiones": self.repeticiones,
             "rep_valid": rep_valid,
+            "rep_rejected": rep_rejected,
+            "rep_rejection_reason": rep_rejection_reason,
         }
 
 

@@ -32,6 +32,19 @@ def test_repeticion_valida():
     assert r.siguiente_paso == "CONTINUAR"
 
 
+def test_repeticion_contada_tiene_evento_de_voz():
+    r = evaluate_correction(SQUAT, _obs(repeticiones=3, rep_valid=True))
+    assert r.evento_voz == "repeticion_contada"
+    assert "Repetición 3 de 10" in r.mensaje_voz
+
+
+def test_repeticion_rechazada_tiene_evento_de_voz():
+    r = evaluate_correction(SQUAT, _obs(rep_rejected=True))
+    assert r.evento_voz == "repeticion_rechazada"
+    assert "no contó" in r.mensaje_voz
+    assert r.siguiente_paso == "REPETIR"
+
+
 def test_postura_mala_en_profundidad():
     r = evaluate_correction(
         SQUAT,
